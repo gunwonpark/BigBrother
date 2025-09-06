@@ -24,6 +24,11 @@ public class FullEyeController : MonoBehaviour
         fullEyeAnimator.SetTrigger("Blink");
     }
 
+    public void FullEyeOpen()
+    {
+		fullEyeAnimator.SetTrigger("Open");
+	}
+
     // Animation Event
     public void SeeAnimationEnd()
     {
