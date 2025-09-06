@@ -564,7 +564,16 @@ MonoBehaviour:
   choiceGroup: {fileID: 5060014092171049258}
   choice1Text: {fileID: 717543057522366629}
   choice2Text: {fileID: 3054677042682706088}
+  npcVisualGroup: {fileID: 6935565779296599852}
+  npcAlphaNpcSpeaking: 1
+  npcAlphaPlayerSpeaking: 0.407
   nextSceneOnFinish: MainScene
+  eye1: {fileID: 0}
+  eye2: {fileID: 0}
+  eyeFadeDuration: 2
+  eyeGapBetween: 1
+  afterEyesWait: 2
+  eyeFadeOutDuration: 1.2
 --- !u!1 &3007839318172756367
 GameObject:
   m_ObjectHideFlags: 0
@@ -711,8 +720,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: -650, y: 320}
-  m_SizeDelta: {x: 159.2186, y: -24.1241}
+  m_AnchoredPosition: {x: -661.3508, y: 320}
+  m_SizeDelta: {x: 387.7494, y: -24.1241}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &7493719173131800071
 CanvasRenderer:
@@ -1234,6 +1243,7 @@ GameObject:
   - component: {fileID: 3547011222284758076}
   - component: {fileID: 5864640887650184071}
   - component: {fileID: 6252425471326846910}
+  - component: {fileID: 6935565779296599852}
   m_Layer: 5
   m_Name: PortraitImage
   m_TagString: Untagged
@@ -1298,6 +1308,18 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
+--- !u!225 &6935565779296599852
+CanvasGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8928533501761578350}
+  m_Enabled: 1
+  m_Alpha: 1
+  m_Interactable: 1
+  m_BlocksRaycasts: 1
+  m_IgnoreParentGroups: 0
 --- !u!1 &9101642328534188432
 GameObject:
   m_ObjectHideFlags: 0

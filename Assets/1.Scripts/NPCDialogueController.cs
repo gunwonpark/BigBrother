@@ -10,7 +10,6 @@ public class NPCDialogueController : MonoBehaviour
 	private const string KEY_NEXT_STAGE = "NextStage";
 
 	public enum NpcId { NPC_001, NPC_002, NPC_003, NPC_004 }
-	// 001=틸로슨, 002=시안, 003=텔레스크린, 004=채링턴
 
 	[Header("Which NPC")]
 	[SerializeField] private NpcId npc = NpcId.NPC_001;
@@ -23,18 +22,31 @@ public class NPCDialogueController : MonoBehaviour
 	[SerializeField] private bool usePunctuationHold = true;
 
 	[Header("UI Refs")]
-	[SerializeField] private RectTransform talkRowRoot; // 이름+대사 부모(좌우 반전 대상)
-	[SerializeField] private TMP_Text nameLeft;         // 단일 이름 텍스트
+	[SerializeField] private RectTransform talkRowRoot;
+	[SerializeField] private TMP_Text nameLeft;
 	[SerializeField] private TMP_Text dialogueText;
-	[SerializeField] private Button backgroundClick;    // 화면 전체 클릭 캐쳐
+	[SerializeField] private Button backgroundClick;
 
 	[Header("Choice (Text Hover)")]
-	[SerializeField] private CanvasGroup choiceGroup;   // 선택지 그룹
+	[SerializeField] private CanvasGroup choiceGroup;
 	[SerializeField] private ChoiceHoverText choice1Text;
 	[SerializeField] private ChoiceHoverText choice2Text;
 
+	[Header("NPC Visual (반투명 제어)")]
+	[SerializeField] private CanvasGroup npcVisualGroup;
+	[SerializeField, Range(0f, 1f)] private float npcAlphaNpcSpeaking = 1f;       // NPC가 말할 때
+	[SerializeField, Range(0f, 1f)] private float npcAlphaPlayerSpeaking = 0.71f; // 플레이어가 말할 때
+
 	[Header("Navigation")]
-	[SerializeField] private string nextSceneOnFinish = "MainScene"; // 끝나면 가는 씬 (스테이지 진입)
+	[SerializeField] private string nextScene = "MainScene";
+
+	[Header("Tilosen FX")]
+	[SerializeField] private CanvasGroup eye1;
+	[SerializeField] private CanvasGroup eye2;
+	[SerializeField] private float eyeFadeDuration = 2f;   // fade-in
+	[SerializeField] private float eyeGapBetween = 1f;     // 눈1→눈2 사이
+	[SerializeField] private float afterEyesWait = 2f;     // 눈2 후 대기
+	[SerializeField] private float eyeFadeOutDuration = 1.2f; // fade-out
 
 	// 내부 상태
 	private readonly List<string> lines = new();
@@ -44,16 +56,26 @@ public class NPCDialogueController : MonoBehaviour
 	private string currentFullRich;
 	private bool isTransitioning;
 
-	// 선택지 트리거 인덱스(없으면 -1)
 	private int choiceTriggerIndex = -1;
 
-	// Choice용 메서드 캐시
+	// 틸로슨 연출 상태
+	private bool tilosenPendingEyeFX = false;        // "뭐라고?" 라인 끝났고, 클릭 시 눈 연출 시작
+	private string tilosenPendingNpcLine = null;     // 눈 연출 후 출력할 빨간 대사
+	private bool tilosenAwaitingLoopChoice = false;  // 빨간 대사 후 클릭 시 다시 선택지
+	private int tilosenEyeFXTriggerLineIndex = -1;   // "@뭐라고?@" 라인 인덱스
+
+	// ("빅브라더님은 위대하다!!") 라인 끝나면 자동 fade-out
+	private bool tilosenPendingFadeOutAfterShout = false;
+	private int tilosenShoutLineIndex = -1;
+
+	// 한 줄 타이핑 완료 콜백 중복 방지
+	private int lastTypingCompleteLineIndex = -1;
+
 	private void OnChoose1() => OnChoose(1);
 	private void OnChoose2() => OnChoose(2);
 
 	void Awake()
 	{
-		// 기본 이름 자동 세팅(비워두면)
 		if (string.IsNullOrWhiteSpace(npcDisplayName))
 		{
 			npcDisplayName = npc switch
@@ -86,17 +108,14 @@ public class NPCDialogueController : MonoBehaviour
 		if (choice2Text) choice2Text.Clicked -= OnChoose2;
 	}
 
-	// --- 인라인 대사(새 기획, 플레이어는 @…@ 래핑) ---
 	void BuildLinesInline()
 	{
 		lines.Clear();
 
 		switch (npc)
 		{
-			// [틸로슨] → 끝나면 Stage 1
 			case NpcId.NPC_001:
 				lines.Add("<b><size=70>빅 브라더 님은 위대하다!!</size></b>");
-				// (여기서 선택지 오픈 예정)
 				lines.Add("@그래 이 모든 건 빅 브라더님의 뜻으로.@");
 				lines.Add("그나저나 어디로 가나?");
 				lines.Add("@아 이쪽에 잠시 볼일이 있어서…@");
@@ -107,10 +126,8 @@ public class NPCDialogueController : MonoBehaviour
 				lines.Add("<b><size=70>그래. 이 모든 건 빅 브라더님을 위하여.</size></b>");
 				break;
 
-			// [시안] → 끝나면 Stage 2
 			case NpcId.NPC_002:
 				lines.Add("어제 사상범들이 교수형에 처하는 걸 봤나?");
-				// (여기서 선택지 오픈 예정)
 				lines.Add("그래 감히 빅 브라더님의 뜻을 거역하는 이들이라니");
 				lines.Add("교수형을 당해도 모자르지 않아 보여.");
 				lines.Add("그렇지 않은가?");
@@ -123,7 +140,6 @@ public class NPCDialogueController : MonoBehaviour
 				lines.Add("<b><size=70>아무튼 이 모든 건 빅 브라더님을 위하여.</size></b>");
 				break;
 
-			// [텔레스크린] → 선택지 없음, 끝나면 Stage 3
 			case NpcId.NPC_003:
 				lines.Add("<i>작년 대비, 배급 식량은 15% 증가하였습니다.</i>");
 				lines.Add("<i>빅 브라더님께서 보장하신 안정적인 공급 덕분에 저희는 새롭고 행복한 삶을 살아가며…</i>");
@@ -136,32 +152,28 @@ public class NPCDialogueController : MonoBehaviour
 				lines.Add("@정말 지긋지긋하다.@");
 				break;
 
-			// [채링턴] → 끝나면 Stage 4
 			case NpcId.NPC_004:
 				lines.Add("…");
 				lines.Add("너는 <b>너를 믿나?</b>");
 				lines.Add("너의 <b>선택을 믿냐</b>는 말이다.");
-				// (여기서 선택지 오픈 예정)
 				lines.Add("<b><size=70>뭐가 됐든 너의 선택을 존중하겠다.</size></b>");
 				lines.Add("<b><size=70>그 결과 또한 네가 짊어지어야 하는 것.</size></b>");
 				break;
 		}
 	}
 
-	// 선택지 트리거 위치(기획 고정)
 	void SetChoiceTriggerByDesign()
 	{
 		choiceTriggerIndex = npc switch
 		{
-			NpcId.NPC_001 => 0, // 틸로슨: 첫 줄 후
-			NpcId.NPC_002 => 0, // 시안: 첫 줄 후
-			NpcId.NPC_003 => -1, // 텔레스크린: 선택지 없음
-			NpcId.NPC_004 => 2, // 채링턴: 두 번째 줄 후
+			NpcId.NPC_001 => 0,
+			NpcId.NPC_002 => 0,
+			NpcId.NPC_003 => -1,
+			NpcId.NPC_004 => 2,
 			_ => -1
 		};
 	}
 
-	// --- 표시 ---
 	void ShowCurrentLine()
 	{
 		if (index >= lines.Count)
@@ -175,6 +187,7 @@ public class NPCDialogueController : MonoBehaviour
 
 		if (nameLeft) nameLeft.text = isPlayer ? playerDisplayName : npcDisplayName;
 		SetFlipped(isPlayer);
+		UpdateNpcVisualAlpha(isPlayer);
 
 		if (typingCo != null) StopCoroutine(typingCo);
 		typingCo = StartCoroutine(TypeRichText(dialogueText, plain));
@@ -188,18 +201,37 @@ public class NPCDialogueController : MonoBehaviour
 
 	public void OnClickBackground()
 	{
-		// 선택지 트리거 지점에서 클릭 → 선택지 오픈
+		// 틸로슨: "@뭐라고?@" 라인 이후 → 클릭하면 눈 연출 시작
+		if (npc == NpcId.NPC_001 && tilosenPendingEyeFX && !isTyping && index == tilosenEyeFXTriggerLineIndex)
+		{
+			StartCoroutine(CoTilosenEyeFXThenReply());
+			return;
+		}
+
+		// 틸로슨 루프: 빨간 대사 뒤 클릭 시, 선택지 다시 열기
+		if (npc == NpcId.NPC_001 && tilosenAwaitingLoopChoice && !isTyping)
+		{
+			if (choiceGroup && choiceGroup.alpha <= 0.001f)
+				OpenChoice();
+			return;
+		}
+
 		if (choiceTriggerIndex >= 0 && index == choiceTriggerIndex && !isTyping)
 		{
 			OpenChoice();
 			return;
 		}
 
-		if (isTyping) ForceComplete();
-		else Next();
+		if (isTyping)
+		{
+			ForceComplete();
+			return;
+		}
+
+		// 4) 일반 진행
+		Next();
 	}
 
-	// === 선택지 ===
 	void OpenChoice()
 	{
 		if (dialogueText) dialogueText.text = string.Empty;
@@ -208,15 +240,15 @@ public class NPCDialogueController : MonoBehaviour
 		{
 			switch (npc)
 			{
-				case NpcId.NPC_001: // 틸로슨
+				case NpcId.NPC_001:
 					choice1Text.SetText("1) 뭐라고?");
 					choice2Text.SetText("2) 빅브라더님은 위대하다!!");
 					break;
-				case NpcId.NPC_002: // 시안
+				case NpcId.NPC_002:
 					choice1Text.SetText("1) 일을 했었네. 영화로 볼 수 있겠지.");
 					choice2Text.SetText("2) 정말 볼만한 교수형이었어.");
 					break;
-				case NpcId.NPC_004: // 채링턴
+				case NpcId.NPC_004:
 					choice1Text.SetText("1) 그래");
 					choice2Text.SetText("2) 아니");
 					break;
@@ -230,13 +262,47 @@ public class NPCDialogueController : MonoBehaviour
 	{
 		SetChoiceVisible(false);
 
+		if (npc == NpcId.NPC_001)
+		{
+			if (which == 1) // "뭐라고?"
+			{
+				// 플레이어 대사 삽입 
+				lines.Insert(index + 1, "@뭐라고?@");
+
+				// 클릭 시점에 눈 연출을 시작하도록 플래그만 세팅
+				tilosenPendingEyeFX = true;
+				tilosenEyeFXTriggerLineIndex = index + 1;
+
+				tilosenPendingNpcLine = "<b><color=#FF3B3B>지금 뭐라고 했나?</color></b>";
+				tilosenAwaitingLoopChoice = true;
+
+				Next(); // "@뭐라고?@" 라인 출력 시작
+				return;
+			}
+			else // "빅브라더님은 위대하다!!"
+			{
+				tilosenAwaitingLoopChoice = false;
+
+				// 샤우트 라인 + 다음 NPC 라인
+				lines.Insert(index + 1, "@<b><size=70>빅브라더님은 위대하다!!</size></b>@");
+				lines.Insert(index + 2, "요즘 일은 잘 되어가나?");
+
+				// 샤우트 라인 종료 시 자동 FadeOut
+				tilosenPendingFadeOutAfterShout = true;
+				tilosenShoutLineIndex = index + 1;
+
+				Next(); // 샤우트 라인 출력 시작
+				return;
+			}
+		}
+
+		// 그 외 NPC
 		var inserts = GetInsertedLinesForChoice(which);
 		if (inserts != null && inserts.Count > 0)
 		{
 			for (int k = 0; k < inserts.Count; k++)
 				lines.Insert(index + 1 + k, inserts[k]);
-
-			Next(); // 첫 삽입 줄부터 출력
+			Next();
 		}
 		else
 		{
@@ -248,20 +314,14 @@ public class NPCDialogueController : MonoBehaviour
 	{
 		switch (npc)
 		{
-			case NpcId.NPC_001: // 틸로슨: 플레이어 → 틸로슨 응답
-				if (which == 1)
-					return new List<string> { "@뭐라고?@", "지금 뭐라고 했나?" };
-				else
-					return new List<string> { "@빅브라더님은 위대하다!!@", "요즘 일은 잘 되어가나?" };
-
-			case NpcId.NPC_002: // 시안: 플레이어 응답만
+			case NpcId.NPC_002:
 				return new List<string>
 				{
 					which == 1 ? "@일을 했었네. 영화로 볼 수 있겠지.@"
 							   : "@정말 볼만한 교수형이었어.@"
 				};
 
-			case NpcId.NPC_004: // 채링턴: 플레이어 응답만
+			case NpcId.NPC_004:
 				return new List<string> { which == 1 ? "@그래@" : "@아니@" };
 		}
 		return null;
@@ -275,20 +335,18 @@ public class NPCDialogueController : MonoBehaviour
 			choiceGroup.interactable = v;
 			choiceGroup.blocksRaycasts = v;
 		}
-		if (backgroundClick) backgroundClick.interactable = !v; // 선택지 열리면 배경 클릭 차단
+		backgroundClick.interactable = !v;
 	}
 
-	// --- 유틸 ---
 	// 플레이어 대사: 문자열이 @...@ 로 감싸져 있으면 true
 	bool IsPlayerLine(string src, out string stripped)
 	{
 		if (!string.IsNullOrEmpty(src) && src.Length >= 2 && src[0] == '@' && src[^1] == '@')
 		{
-			// @@ → @ 이스케이프 허용 (원치 않으면 Replace 제거)
 			stripped = src.Substring(1, src.Length - 2).Replace("@@", "@");
 			return true;
 		}
-		stripped = src; // NPC 대사(리치태그 포함 가능)
+		stripped = src;
 		return false;
 	}
 
@@ -323,6 +381,8 @@ public class NPCDialogueController : MonoBehaviour
 
 		isTyping = false;
 		typingCo = null;
+
+		OnLineTypingComplete(index);
 	}
 
 	void ForceComplete()
@@ -332,6 +392,112 @@ public class NPCDialogueController : MonoBehaviour
 		typingCo = null;
 		isTyping = false;
 		dialogueText.text = currentFullRich ?? dialogueText.text;
+
+		// 스킵으로 끝내도 동일하게 콜백
+		OnLineTypingComplete(index);
+	}
+
+	void OnLineTypingComplete(int lineIndex)
+	{
+		// 중복 방지
+		if (lastTypingCompleteLineIndex == lineIndex) return;
+		lastTypingCompleteLineIndex = lineIndex;
+
+		// 샤우트 라인 끝난 즉시 눈 FadeOut
+		if (npc == NpcId.NPC_001 && tilosenPendingFadeOutAfterShout && lineIndex == tilosenShoutLineIndex)
+		{
+			StartCoroutine(CoFadeOutEyesOnly());
+			return;
+		}
+	}
+
+	void UpdateNpcVisualAlpha(bool isPlayerSpeaking)
+	{
+		if (!npcVisualGroup) return;
+		npcVisualGroup.alpha = isPlayerSpeaking ? npcAlphaPlayerSpeaking : npcAlphaNpcSpeaking;
+	}
+
+	IEnumerator CoTilosenEyeFXThenReply()
+	{
+		backgroundClick.interactable = false;
+
+		dialogueText.gameObject.SetActive(false);
+
+		eye1.alpha = 0f;
+		eye2.alpha = 0f;
+
+		yield return FadeCanvas(eye1, 0f, 1f, eyeFadeDuration);
+
+
+		yield return new WaitForSeconds(eyeGapBetween);
+
+		yield return FadeCanvas(eye2, 0f, 1f, eyeFadeDuration);
+
+		yield return new WaitForSeconds(afterEyesWait);
+
+		dialogueText.gameObject.SetActive(true);
+
+		if (!string.IsNullOrEmpty(tilosenPendingNpcLine))
+		{
+			lines.Insert(index + 1, tilosenPendingNpcLine);
+			tilosenPendingNpcLine = null;
+		}
+		tilosenPendingEyeFX = false;
+
+		backgroundClick.interactable = true;
+		Next(); // 빨간 대사 표시
+	}
+
+	IEnumerator CoFadeOutEyesOnly()
+	{
+		tilosenPendingFadeOutAfterShout = false; // 소비
+
+		backgroundClick.interactable = false;
+
+		if (AreEyesVisible())
+			yield return FadeEyesOut(eyeFadeOutDuration);
+
+		backgroundClick.interactable = true;
+	}
+
+	bool AreEyesVisible()
+	{
+		bool e1 = eye1 && eye1.gameObject.activeInHierarchy && eye1.alpha > 0.01f;
+		bool e2 = eye2 && eye2.gameObject.activeInHierarchy && eye2.alpha > 0.01f;
+		return e1 || e2;
+	}
+
+	IEnumerator FadeEyesOut(float dur)
+	{
+		float t = 0f;
+		float a1s = eye1 ? eye1.alpha : 0f;
+		float a2s = eye2 ? eye2.alpha : 0f;
+
+		while (t < dur)
+		{
+			t += Time.deltaTime;
+			float k = Mathf.Clamp01(t / dur);
+			eye1.alpha = Mathf.Lerp(a1s, 0f, k);
+			eye2.alpha = Mathf.Lerp(a2s, 0f, k);
+			yield return null;
+		}
+
+		eye1.alpha = 0f;
+		eye2.alpha = 0f;
+	}
+
+	IEnumerator FadeCanvas(CanvasGroup cg, float from, float to, float dur)
+	{
+		float t = 0f;
+		if (cg) cg.alpha = from;
+		while (t < dur)
+		{
+			t += Time.deltaTime;
+			float k = Mathf.Clamp01(t / dur);
+			if (cg) cg.alpha = Mathf.Lerp(from, to, k);
+			yield return null;
+		}
+		if (cg) cg.alpha = to;
 	}
 
 	// --- 씬 전환 ---
@@ -340,28 +506,23 @@ public class NPCDialogueController : MonoBehaviour
 		if (isTransitioning) return;
 		isTransitioning = true;
 
-		int next = GetDefaultNextStageByNpc(); // 1/2/3/4 고정 매핑
+		int next = GetDefaultNextStageByNpc();
 		if (next > 0)
 		{
-			PlayerPrefs.SetInt(KEY_NEXT_STAGE, next);
-			PlayerPrefs.Save();
-		}
-		else
-		{
-			PlayerPrefs.DeleteKey(KEY_NEXT_STAGE);
+			DataManager.Instance.CurrentWorldLevel = next;
 		}
 
-		SceneManager.LoadScene(nextSceneOnFinish);
+		SceneManager.LoadScene(nextScene);
 	}
 
 	int GetDefaultNextStageByNpc()
 	{
 		switch (npc)
 		{
-			case NpcId.NPC_001: return 1; // 틸로슨
-			case NpcId.NPC_002: return 2; // 시안
-			case NpcId.NPC_003: return 3; // 텔레스크린
-			case NpcId.NPC_004: return 4; // 채링턴
+			case NpcId.NPC_001: return 1;
+			case NpcId.NPC_002: return 2;
+			case NpcId.NPC_003: return 3;
+			case NpcId.NPC_004: return 4;
 			default: return 0;
 		}
 	}
@@ -369,7 +530,6 @@ public class NPCDialogueController : MonoBehaviour
 	// === 좌우 반전(플레이어 대사 전용) ===
 	void SetFlipped(bool flipped)
 	{
-		// 부모 컨테이너 반전
 		if (talkRowRoot)
 		{
 			var s = talkRowRoot.localScale;
@@ -377,7 +537,6 @@ public class NPCDialogueController : MonoBehaviour
 			talkRowRoot.localScale = s;
 		}
 
-		// 텍스트는 다시 반전해서 정상 읽기
 		if (nameLeft)
 		{
 			var s = nameLeft.rectTransform.localScale;

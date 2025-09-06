@@ -29,7 +29,7 @@ public class TeleScreenVideoLoop : MonoBehaviour
 	{
 		if (!vp) yield break;
 
-		string url = System.IO.Path.Combine(Application.streamingAssetsPath, "Telescreen.mp4");
+		string url = System.IO.Path.Combine(Application.streamingAssetsPath, "Telescreen02.mp4");
 
 		vp.url = url;
 
