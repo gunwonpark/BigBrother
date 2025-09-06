@@ -23,8 +23,12 @@ public class GameManager : MonoBehaviour
 
     [Header("Game Settings")]
     [SerializeField] private StageDatas stages;         // 스테이지 정보
-    [SerializeField] private int currentStageIndex;
-    public int CurrentStageIndex => currentStageIndex;
+
+    public int CurrentStageIndex
+    {
+        get => DataManager.Instance.CurrentWorldLevel;
+        private set => DataManager.Instance.CurrentWorldLevel = value;
+    }
 
     [SerializeField] private StageController stageController; // StageController 스크립트 참조
     [SerializeField] private EyeComponent[] eyeObjects = new EyeComponent[2];
@@ -58,11 +62,10 @@ public class GameManager : MonoBehaviour
 
     public void StartGame()
     {
-        currentStageIndex = 0;
-        
+
         ResetEyes();
 
-        LoadStage(currentStageIndex);
+        LoadStage(DataManager.Instance.CurrentWorldLevel);
     }
 
     private void ResetEyes()
@@ -77,7 +80,7 @@ public class GameManager : MonoBehaviour
 
     public void LoadStage(int stageIndex)
     {
-        curStage = stages.stageDatas[currentStageIndex];
+        curStage = stages.stageDatas[CurrentStageIndex];
         IsGameActive = true;
         lives = curStage.AnswerCount;
         mainUI.ResetUI();
@@ -203,9 +206,9 @@ public class GameManager : MonoBehaviour
     {
         if (!IsGameActive) return;
         GameOver();
-        currentStageIndex++;
+        CurrentStageIndex++;
 
-        if (currentStageIndex >= stages.stageDatas.Count)
+        if (CurrentStageIndex >= stages.stageDatas.Count)
         {
             StartCoroutine(EndingSequence());
         }
@@ -225,7 +228,7 @@ public class GameManager : MonoBehaviour
         mainUI.ShowAnswerText();
         yield return new WaitForSeconds(5f);
         // n 번째 암호입니다 라는 글자 띄우고 3초 대기
-        mainUI.ShowAquireText(currentStageIndex);
+        mainUI.ShowAquireText(CurrentStageIndex);
         yield return new WaitForSeconds(3f);
         mainUI.HideAquireText();
         mainUI.HideAnswerText();
@@ -278,6 +281,6 @@ public class GameManager : MonoBehaviour
         IsGameActive = true;
         fullEyeController.gameObject.SetActive(true);
         ResetEyes();
-        LoadStage(currentStageIndex);
+        LoadStage(CurrentStageIndex);
     }
 }

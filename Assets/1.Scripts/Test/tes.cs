@@ -3,130 +3,143 @@ using TMPro;
 using System.Collections;
 using System.Collections.Generic;
 
-public class TextRearrangeEffect : MonoBehaviour
+public class LetterAnimator : MonoBehaviour
 {
-    private TMP_Text textMeshPro;
+    [SerializeField] private TMP_Text sourceText; // "다 한 좋 다" (움직일 텍스트)
+    [SerializeField] private TMP_Text targetText; // "좋아한다" (목표 위치 계산용 텍스트)
+    [SerializeField] private float duration = 2.0f; // 애니메이션 시간
+    [SerializeField] private AnimationCurve curve = AnimationCurve.EaseInOut(0, 0, 1, 1); // 움직임 제어 커브
 
-    // 시작 단어와 목표 단어
-    public string startWord = "SAEPEC";
-    public string endWord = "ESCAPE";
-
-    // 각 글자의 시작 위치와 목표 위치
-    private Vector3[] startPositions;
-    private Vector3[] endPositions;
-
-    // 애니메이션 지속 시간
-    public float duration = 2.0f;
-    private float elapsedTime = 0f;
+    // 각 글자의 애니메이션 정보를 담는 구조체
+    private struct CharAnimationInfo
+    {
+        public int sourceCharIndex;
+        public int targetCharIndex;
+        public Vector3[] initialPositions;
+        public Vector3[] finalPositions;
+    }
 
     void Start()
     {
-        textMeshPro = GetComponent<TMP_Text>();
-        if (textMeshPro == null)
-        {
-            Debug.LogError("TextMeshPro 컴포넌트를 찾을 수 없습니다.");
-            return;
-        }
-
-        StartCoroutine(PrepareAndPlayAnimation());
+        // 스페이스바를 누르면 애니메이션 시작 (테스트용)
+        Debug.Log("Press Spacebar to start the animation.");
     }
-
-    IEnumerator PrepareAndPlayAnimation()
-    {
-        // 1. 초기 텍스트 설정 및 위치 계산
-        textMeshPro.text = startWord;
-        // 텍스트 지오메트리를 강제로 업데이트하여 문자 정보를 즉시 가져옴
-        textMeshPro.ForceMeshUpdate();
-        yield return null; // 한 프레임 대기하여 업데이트 완료 보장
-
-        // 시작 위치 저장
-        startPositions = new Vector3[startWord.Length];
-        for (int i = 0; i < startWord.Length; i++)
-        {
-            // 각 문자의 중심 위치를 저장
-            TMP_CharacterInfo charInfo = textMeshPro.textInfo.characterInfo[i];
-            int vertexIndex = charInfo.vertexIndex;
-            Vector3[] vertices = textMeshPro.mesh.vertices;
-            startPositions[i] = (vertices[vertexIndex + 0] + vertices[vertexIndex + 2]) / 2;
-        }
-
-
-        // 2. 목표 텍스트 설정 및 위치 계산
-        textMeshPro.text = endWord;
-        textMeshPro.ForceMeshUpdate();
-        yield return null; // 한 프레임 대기
-
-        // 목표 위치 저장
-        endPositions = new Vector3[endWord.Length];
-        for (int i = 0; i < endWord.Length; i++)
-        {
-            TMP_CharacterInfo charInfo = textMeshPro.textInfo.characterInfo[i];
-            int vertexIndex = charInfo.vertexIndex;
-            Vector3[] vertices = textMeshPro.mesh.vertices;
-            endPositions[i] = (vertices[vertexIndex + 0] + vertices[vertexIndex + 2]) / 2;
-        }
-
-
-        // 3. 애니메이션 재생 준비
-        textMeshPro.text = startWord; // 다시 시작 단어로 표시
-        textMeshPro.ForceMeshUpdate();
-        yield return null;
-
-        // 애니메이션 재생 시작
-        elapsedTime = 0f;
-    }
-
 
     void Update()
     {
-        if (startPositions == null || endPositions == null || elapsedTime >= duration)
+        if (Input.GetKeyDown(KeyCode.Space))
         {
-            return;
+            StartCoroutine(AnimateLetters());
+        }
+    }
+
+    private IEnumerator AnimateLetters()
+    {
+        // 1. 텍스트 메쉬 정보를 강제로 업데이트하여 최신 상태로 만듭니다.
+        sourceText.ForceMeshUpdate();
+        targetText.ForceMeshUpdate();
+
+        // 2. 글자 매핑: 어떤 글자가 어디로 가야할 지 결정합니다.
+        List<CharAnimationInfo> animationInfos = MapCharacters();
+
+        // 3. 애니메이션 실행
+        float timer = 0f;
+        while (timer < duration)
+        {
+            timer += Time.deltaTime;
+            float progress = Mathf.Clamp01(timer / duration);
+            float easedProgress = curve.Evaluate(progress); // 커브를 적용하여 더 부드러운 움직임 생성
+
+            UpdateVertices(animationInfos, easedProgress);
+
+            yield return null;
         }
 
-        elapsedTime += Time.deltaTime;
-        float t = Mathf.Clamp01(elapsedTime / duration);
-        // 부드러운 움직임을 위한 Ease-in-out 효과
-        t = t * t * (3f - 2f * t);
+        // 4. 애니메이션 종료 후 위치 보정
+        UpdateVertices(animationInfos, 1f);
 
-        TMP_TextInfo textInfo = textMeshPro.textInfo;
-        TMP_MeshInfo[] cachedMeshInfo = textInfo.CopyMeshInfoVertexData();
+        Debug.Log("Animation Complete!");
+    }
 
-        // 각 글자의 매핑 (S -> E, A -> S, E -> C, P -> A, E -> P, C -> E)
-        int[] mapping = new int[] { 4, 0, 5, 1, 2, 3 }; // startWord 인덱스 -> endWord 인덱스
+    private List<CharAnimationInfo> MapCharacters()
+    {
+        TMP_TextInfo sourceInfo = sourceText.textInfo;
+        TMP_TextInfo targetInfo = targetText.textInfo;
 
-        for (int i = 0; i < textInfo.characterCount; i++)
+        var animationInfos = new List<CharAnimationInfo>();
+        var usedSourceIndices = new HashSet<int>();
+
+        for (int i = 0; i < targetInfo.characterCount; i++)
         {
-            if (!textInfo.characterInfo[i].isVisible) continue;
+            if (char.IsWhiteSpace(targetInfo.characterInfo[i].character)) continue;
 
-            int mappedIndex = mapping[i];
+            char targetChar = targetInfo.characterInfo[i].character;
+            int targetVertexIndex = targetInfo.characterInfo[i].vertexIndex;
 
-            // 현재 위치 계산 (보간)
-            Vector3 currentPos = Vector3.Lerp(startPositions[i], endPositions[mappedIndex], t);
+            for (int j = 0; j < sourceInfo.characterCount; j++)
+            {
+                if (usedSourceIndices.Contains(j) || char.IsWhiteSpace(sourceInfo.characterInfo[j].character)) continue;
 
-            // 원래 위치와의 차이 계산
-            Vector3 offset = currentPos - startPositions[i];
+                if (sourceInfo.characterInfo[j].character == targetChar)
+                {
+                    int sourceVertexIndex = sourceInfo.characterInfo[j].vertexIndex;
 
-            // 각 글자를 구성하는 정점(vertex)들을 이동
-            int vertexIndex = textInfo.characterInfo[i].vertexIndex;
-            var verts = cachedMeshInfo[0].vertices;
-            verts[vertexIndex + 0] += offset;
-            verts[vertexIndex + 1] += offset;
-            verts[vertexIndex + 2] += offset;
-            verts[vertexIndex + 3] += offset;
+                    // 목표 위치를 계산하는 부분 수정
+                    Vector3[] finalPositions = new Vector3[4];
+                    Vector3[] targetLocalPositions = GetVertexPositions(targetInfo, targetVertexIndex);
+
+                    for (int k = 0; k < 4; k++)
+                    {
+                        // 1. Target의 로컬 정점 위치를 월드 위치로 변환
+                        Vector3 worldPos = targetText.transform.TransformPoint(targetLocalPositions[k]);
+
+                        // 2. 월드 위치를 다시 Source의 로컬 위치로 변환
+                        finalPositions[k] = sourceText.transform.InverseTransformPoint(worldPos);
+                    }
+
+                    animationInfos.Add(new CharAnimationInfo
+                    {
+                        sourceCharIndex = j,
+                        targetCharIndex = i,
+                        initialPositions = GetVertexPositions(sourceInfo, sourceVertexIndex),
+                        finalPositions = finalPositions // 변환된 최종 위치를 사용
+                    });
+
+                    usedSourceIndices.Add(j);
+                    break;
+                }
+            }
+        }
+        return animationInfos;
+    }
+
+    // 특정 글자의 4개 정점 위치를 배열로 반환하는 함수
+    private Vector3[] GetVertexPositions(TMP_TextInfo textInfo, int vertexIndex)
+    {
+        Vector3[] positions = new Vector3[4];
+        for (int i = 0; i < 4; i++)
+        {
+            positions[i] = textInfo.meshInfo[0].vertices[vertexIndex + i];
+        }
+        return positions;
+    }
+
+    private void UpdateVertices(List<CharAnimationInfo> animationInfos, float progress)
+    {
+        Vector3[] vertices = sourceText.textInfo.meshInfo[0].vertices;
+
+        foreach (var info in animationInfos)
+        {
+            int sourceVertexIndex = sourceText.textInfo.characterInfo[info.sourceCharIndex].vertexIndex;
+
+            // 시작 위치와 목표 위치 사이를 보간(Lerp)하여 현재 위치 계산
+            for (int i = 0; i < 4; i++)
+            {
+                vertices[sourceVertexIndex + i] = Vector3.Lerp(info.initialPositions[i], info.finalPositions[i], progress);
+            }
         }
 
-        // 수정된 정점 정보로 메쉬 업데이트
-        for (int i = 0; i < textInfo.meshInfo.Length; i++)
-        {
-            textInfo.meshInfo[i].mesh.vertices = cachedMeshInfo[i].vertices;
-            textMeshPro.UpdateGeometry(textInfo.meshInfo[i].mesh, i);
-        }
-
-        // 애니메이션이 끝나면 최종 텍스트로 설정
-        if (elapsedTime >= duration)
-        {
-            textMeshPro.text = endWord;
-        }
+        sourceText.textInfo.meshInfo[0].vertices = vertices;
+        sourceText.UpdateVertexData(TMP_VertexDataUpdateFlags.Vertices); // 정점 데이터 업데이트 요청
     }
 }

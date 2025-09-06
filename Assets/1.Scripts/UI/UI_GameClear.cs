@@ -36,7 +36,7 @@ public class UI_GameClear : MonoBehaviour
 
     private void NextScene()
     {
-        GameManager.Instance.LoadStage(GameManager.Instance.CurrentStageIndex);
+        GameManager.Instance.LoadStage(DataManager.Instance.CurrentWorldLevel);
         this.gameObject.SetActive(false);
     }
 }
