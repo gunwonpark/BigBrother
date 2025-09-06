@@ -353,6 +353,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 2170434545055300464, guid: 8811aff068ee21043b0ab349d5522c8f, type: 3}
+      propertyPath: npcDisplayName
+      value: 
+      objectReference: {fileID: 0}
     - target: {fileID: 2999129526040974700, guid: 8811aff068ee21043b0ab349d5522c8f, type: 3}
       propertyPath: m_Name
       value: UI_Dialogue (NPC_001)
@@ -528,7 +532,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 2170434545055300464, guid: 8811aff068ee21043b0ab349d5522c8f, type: 3}
       propertyPath: npcDisplayName
-      value: "\uC2DC\uC548"
+      value: 
       objectReference: {fileID: 0}
     - target: {fileID: 2999129526040974700, guid: 8811aff068ee21043b0ab349d5522c8f, type: 3}
       propertyPath: m_Name
@@ -694,6 +698,10 @@ PrefabInstance:
     - target: {fileID: 2170434545055300464, guid: 8811aff068ee21043b0ab349d5522c8f, type: 3}
       propertyPath: npc
       value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 2170434545055300464, guid: 8811aff068ee21043b0ab349d5522c8f, type: 3}
+      propertyPath: npcDisplayName
+      value: 
       objectReference: {fileID: 0}
     - target: {fileID: 2999129526040974700, guid: 8811aff068ee21043b0ab349d5522c8f, type: 3}
       propertyPath: m_Name
@@ -983,7 +991,7 @@ MonoBehaviour:
   - {fileID: 1674466810}
   - {fileID: 712873000}
   - {fileID: 1720384765}
-  fallbackNpcNumber: 4
+  fallbackNpcNumber: 1
 --- !u!4 &1717594821
 Transform:
   m_ObjectHideFlags: 0
@@ -1018,7 +1026,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 2170434545055300464, guid: 8811aff068ee21043b0ab349d5522c8f, type: 3}
       propertyPath: npcDisplayName
-      value: "\uD154\uB808\uC2A4\uD06C\uB9B0"
+      value: 
       objectReference: {fileID: 0}
     - target: {fileID: 2999129526040974700, guid: 8811aff068ee21043b0ab349d5522c8f, type: 3}
       propertyPath: m_Name

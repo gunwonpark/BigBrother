@@ -1,4 +1,4 @@
-using System.Collections;
+ï»¿using System.Collections;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
@@ -10,33 +10,33 @@ public class NPCDialogueController : MonoBehaviour
 	private const string KEY_NEXT_STAGE = "NextStage";
 
 	public enum NpcId { NPC_001, NPC_002, NPC_003, NPC_004 }
-	// 001=Æ¿·Î½¼, 002=½Ã¾È, 003=ÅÚ·¹½ºÅ©¸°, 004=Ã¤¸µÅÏ
+	// 001=í‹¸ë¡œìŠ¨, 002=ì‹œì•ˆ, 003=í…”ë ˆìŠ¤í¬ë¦°, 004=ì±„ë§í„´
 
 	[Header("Which NPC")]
 	[SerializeField] private NpcId npc = NpcId.NPC_001;
 
 	[Header("Names / Typing")]
 	[SerializeField] private string npcDisplayName = "NPC";
-	[SerializeField] private string playerDisplayName = "³ª";
+	[SerializeField] private string playerDisplayName = "ë‚˜";
 	[SerializeField] private float charDelay = 0.05f;
 	[SerializeField] private float punctuationHold = 0.08f;
 	[SerializeField] private bool usePunctuationHold = true;
 
 	[Header("UI Refs")]
-	[SerializeField] private RectTransform talkRowRoot; // ¡ç ÀÌ¸§+´ë»ç ºÎ¸ğ(ÁÂ¿ì ¹İÀü ´ë»ó)
-	[SerializeField] private TMP_Text nameLeft;         // ¡ç Ç×»ó ¿©±â ÇÏ³ª¸¸ »ç¿ë
+	[SerializeField] private RectTransform talkRowRoot; // ì´ë¦„+ëŒ€ì‚¬ ë¶€ëª¨(ì¢Œìš° ë°˜ì „ ëŒ€ìƒ)
+	[SerializeField] private TMP_Text nameLeft;         // ë‹¨ì¼ ì´ë¦„ í…ìŠ¤íŠ¸
 	[SerializeField] private TMP_Text dialogueText;
-	[SerializeField] private Button backgroundClick;    // È­¸é ÀüÃ¼ Å¬¸¯ Ä³ÃÄ
+	[SerializeField] private Button backgroundClick;    // í™”ë©´ ì „ì²´ í´ë¦­ ìºì³
 
 	[Header("Choice (Text Hover)")]
-	[SerializeField] private CanvasGroup choiceGroup;   // ¼±ÅÃÁö ±×·ì
+	[SerializeField] private CanvasGroup choiceGroup;   // ì„ íƒì§€ ê·¸ë£¹
 	[SerializeField] private ChoiceHoverText choice1Text;
 	[SerializeField] private ChoiceHoverText choice2Text;
 
 	[Header("Navigation")]
-	[SerializeField] private string nextSceneOnFinish = "MainScene"; // ³¡³ª¸é °¡´Â ¾À (½ºÅ×ÀÌÁö ÁøÀÔ)
+	[SerializeField] private string nextSceneOnFinish = "MainScene"; // ëë‚˜ë©´ ê°€ëŠ” ì”¬ (ìŠ¤í…Œì´ì§€ ì§„ì…)
 
-	// ³»ºÎ »óÅÂ
+	// ë‚´ë¶€ ìƒíƒœ
 	private readonly List<string> lines = new();
 	private int index;
 	private bool isTyping;
@@ -44,24 +44,24 @@ public class NPCDialogueController : MonoBehaviour
 	private string currentFullRich;
 	private bool isTransitioning;
 
-	// ¼±ÅÃÁö Æ®¸®°Å ÀÎµ¦½º(¾øÀ¸¸é -1)
+	// ì„ íƒì§€ íŠ¸ë¦¬ê±° ì¸ë±ìŠ¤(ì—†ìœ¼ë©´ -1)
 	private int choiceTriggerIndex = -1;
 
-	// Choice¿ë ¸Ş¼­µå Ä³½Ã
+	// Choiceìš© ë©”ì„œë“œ ìºì‹œ
 	private void OnChoose1() => OnChoose(1);
 	private void OnChoose2() => OnChoose(2);
 
 	void Awake()
 	{
-		// ±âº» ÀÌ¸§ ÀÚµ¿ ¼¼ÆÃ(ºñ¿öµÎ¸é)
+		// ê¸°ë³¸ ì´ë¦„ ìë™ ì„¸íŒ…(ë¹„ì›Œë‘ë©´)
 		if (string.IsNullOrWhiteSpace(npcDisplayName))
 		{
 			npcDisplayName = npc switch
 			{
-				NpcId.NPC_001 => "Æ¿·Î½¼",
-				NpcId.NPC_002 => "½Ã¾È",
-				NpcId.NPC_003 => "ÅÚ·¹½ºÅ©¸°",
-				NpcId.NPC_004 => "Ã¤¸µÅÏ",
+				NpcId.NPC_001 => "í‹¸ë¡œìŠ¨",
+				NpcId.NPC_002 => "ì‹œì•ˆ",
+				NpcId.NPC_003 => "í…”ë ˆìŠ¤í¬ë¦°",
+				NpcId.NPC_004 => "ì±„ë§í„´",
 				_ => "NPC"
 			};
 		}
@@ -86,79 +86,82 @@ public class NPCDialogueController : MonoBehaviour
 		if (choice2Text) choice2Text.Clicked -= OnChoose2;
 	}
 
-	// --- ÀÎ¶óÀÎ ´ë»ç(»õ ±âÈ¹) ---
+	// --- ì¸ë¼ì¸ ëŒ€ì‚¬(ìƒˆ ê¸°íš, í”Œë ˆì´ì–´ëŠ” @â€¦@ ë˜í•‘) ---
 	void BuildLinesInline()
 	{
 		lines.Clear();
 
 		switch (npc)
 		{
-			// [Æ¿·Î½¼] ¡æ ³¡³ª¸é Stage 1
+			// [í‹¸ë¡œìŠ¨] â†’ ëë‚˜ë©´ Stage 1
 			case NpcId.NPC_001:
-				lines.Add("ºò ºê¶ó´õ ´ÔÀº À§´ëÇÏ´Ù!!");
-				// (¿©±â¼­ ¼±ÅÃÁö ¿ÀÇÂ ¿¹Á¤)
-				lines.Add("<±×·¡ ÀÌ ¸ğµç °Ç ºò ºê¶ó´õ´ÔÀÇ ¶æÀ¸·Î.>");
-				lines.Add("±×³ªÀú³ª ¾îµğ·Î °¡³ª?");
-				lines.Add("<¾Æ ÀÌÂÊ¿¡ Àá½Ã º¼ÀÏÀÌ ÀÖ¾î¼­¡¦>");
-				lines.Add("±×·¡ ±× ÂÊ¿¡ »ç»ó °æÂûÀÌ Á¤¸» ¸¹ÀÌ ÀÖ´õ¶ó°í.");
-				lines.Add("¹¹ Áß¿äÇÑ °Ô ÀÖ³ª º¸´õ±º.");
-				lines.Add("<(´ëÀå [          ]ÀÌ ³²°ÜµĞ ¾ÏÈ£¸¦ ÁöÅ°´Â ÀÚµéÀÎ°¡º¸±º. ½±Áö ¾Ê°Ú´Â°É.)>");
-				lines.Add("<±×·¸±º. ´Ùµé °í»ıÇÏ½Ã³×.>");
-				lines.Add("±×·¡. ÀÌ ¸ğµç °Ç ºò ºê¶ó´õ´ÔÀ» À§ÇÏ¿©.");
+				lines.Add("<b><size=70>ë¹… ë¸Œë¼ë” ë‹˜ì€ ìœ„ëŒ€í•˜ë‹¤!!</size></b>");
+				// (ì—¬ê¸°ì„œ ì„ íƒì§€ ì˜¤í”ˆ ì˜ˆì •)
+				lines.Add("@ê·¸ë˜ ì´ ëª¨ë“  ê±´ ë¹… ë¸Œë¼ë”ë‹˜ì˜ ëœ»ìœ¼ë¡œ.@");
+				lines.Add("ê·¸ë‚˜ì €ë‚˜ ì–´ë””ë¡œ ê°€ë‚˜?");
+				lines.Add("@ì•„ ì´ìª½ì— ì ì‹œ ë³¼ì¼ì´ ìˆì–´ì„œâ€¦@");
+				lines.Add("ê·¸ë˜ ê·¸ ìª½ì— <b>ì‚¬ìƒ ê²½ì°°</b>ì´ ì •ë§ ë§ì´ ìˆë”ë¼ê³ .");
+				lines.Add("ë­ ì¤‘ìš”í•œ ê²Œ ìˆë‚˜ ë³´ë”êµ°.");
+				lines.Add("@(ëŒ€ì¥ [          ]ì´ ë‚¨ê²¨ë‘” ì•”í˜¸ë¥¼ ì§€í‚¤ëŠ” ìë“¤ì¸ê°€ë³´êµ°. ì‰½ì§€ ì•Šê² ëŠ”ê±¸.)@");
+				lines.Add("@ê·¸ë ‡êµ°. ë‹¤ë“¤ ê³ ìƒí•˜ì‹œë„¤.@");
+				lines.Add("<b><size=70>ê·¸ë˜. ì´ ëª¨ë“  ê±´ ë¹… ë¸Œë¼ë”ë‹˜ì„ ìœ„í•˜ì—¬.</size></b>");
 				break;
 
-			// [½Ã¾È] ¡æ ³¡³ª¸é Stage 2
+			// [ì‹œì•ˆ] â†’ ëë‚˜ë©´ Stage 2
 			case NpcId.NPC_002:
-				lines.Add("¾îÁ¦ »ç»ó¹üµéÀÌ ±³¼öÇü¿¡ Ã³ÇÏ´Â °É ºÃ³ª?");
-				// (¿©±â¼­ ¼±ÅÃÁö ¿ÀÇÂ ¿¹Á¤)
-				lines.Add("±×·¡ °¨È÷ ºò ºê¶ó´õ´ÔÀÇ ¶æÀ» °Å¿ªÇÏ´Â ÀÌµéÀÌ¶ó´Ï");
-				lines.Add("±³¼öÇüÀ» ´çÇØµµ ¸ğÀÚ¸£Áö ¾Ê¾Æ º¸¿©.");
-				lines.Add("±×·¸Áö ¾ÊÀº°¡?");
-				lines.Add("<±×·¸Áö.>");
-				lines.Add("<(¹«°íÇÑ ¿ì¸® µ¿·áµéÀÌ ¶Ç Á×°í ¸»¾Ò±¸³ª.)>");
-				lines.Add("±×³ªÀú³ª ¾îµô °¬´Ù¿Ô±æ·¡ ±×¸® ¶¡ Åõ¼ºÀÎ°¡?");
-				lines.Add("¹¹ ¾îµğ ¿îµ¿ÀÌ¶óµµ ÇÏ°í ¿Ô´Â°¡?");
-				lines.Add("<¾Æ¹«°Íµµ ¾Æ´Ò¼¼.>");
-				lines.Add("½Ã½ÃÇÏ±º. ¾Æ¹«Æ° ÀÌ ¸ğµç °Ç ºò ºê¶ó´õ´ÔÀ» À§ÇÏ¿©.");
+				lines.Add("ì–´ì œ ì‚¬ìƒë²”ë“¤ì´ êµìˆ˜í˜•ì— ì²˜í•˜ëŠ” ê±¸ ë´¤ë‚˜?");
+				// (ì—¬ê¸°ì„œ ì„ íƒì§€ ì˜¤í”ˆ ì˜ˆì •)
+				lines.Add("ê·¸ë˜ ê°íˆ ë¹… ë¸Œë¼ë”ë‹˜ì˜ ëœ»ì„ ê±°ì—­í•˜ëŠ” ì´ë“¤ì´ë¼ë‹ˆ");
+				lines.Add("êµìˆ˜í˜•ì„ ë‹¹í•´ë„ ëª¨ìë¥´ì§€ ì•Šì•„ ë³´ì—¬.");
+				lines.Add("ê·¸ë ‡ì§€ ì•Šì€ê°€?");
+				lines.Add("@ê·¸ë ‡ì§€.@");
+				lines.Add("@(ë¬´ê³ í•œ ìš°ë¦¬ ë™ë£Œë“¤ì´ ë˜ ì£½ê³  ë§ì•˜êµ¬ë‚˜.)@");
+				lines.Add("ê·¸ë‚˜ì €ë‚˜ ì–´ë”œ ê°”ë‹¤ì™”ê¸¸ë˜ ê·¸ë¦¬ ë•€ íˆ¬ì„±ì¸ê°€?");
+				lines.Add("ë­ ì–´ë”” ìš´ë™ì´ë¼ë„ í•˜ê³  ì™”ëŠ”ê°€?");
+				lines.Add("@ì•„ë¬´ê²ƒë„ ì•„ë‹ì„¸.@");
+				lines.Add("ì‹œì‹œí•˜êµ°.");
+				lines.Add("<b><size=70>ì•„ë¬´íŠ¼ ì´ ëª¨ë“  ê±´ ë¹… ë¸Œë¼ë”ë‹˜ì„ ìœ„í•˜ì—¬.</size></b>");
 				break;
 
-			// [ÅÚ·¹½ºÅ©¸°] ¡æ ¼±ÅÃÁö ¾øÀ½, ³¡³ª¸é Stage 3
+			// [í…”ë ˆìŠ¤í¬ë¦°] â†’ ì„ íƒì§€ ì—†ìŒ, ëë‚˜ë©´ Stage 3
 			case NpcId.NPC_003:
-				lines.Add("ÀÛ³â ´ëºñ, ¹è±Ş ½Ä·®Àº 15% Áõ°¡ÇÏ¿´½À´Ï´Ù.");
-				lines.Add("ºò ºê¶ó´õ´Ô²²¼­ º¸ÀåÇÏ½Å ¾ÈÁ¤ÀûÀÎ °ø±Ş ´öºĞ¿¡ ÀúÈñ´Â »õ·Ó°í Çàº¹ÇÑ »îÀ» »ì¾Æ°¡¸ç¡¦");
-				lines.Add("<»õ·Ó°í Çàº¹ÇÑ »îÀÌ¶ó´Â ¸»ÀÌ ¸î ¹øÂ° ³ª¿À´Â °ÇÁö.>");
-				lines.Add("<Ç³¿äºÎ°¡ ¿äÁò ÀÚÁÖ ¾²´Â »óÅõÀûÀÎ ¸»ÀÌ±º.>");
-				lines.Add("À§´ëÇÏ½Å ºò ºê¶ó´õ´Ô²²¼­´Â »ç»ó¹üÀ» »öÃâÇÏ±â À§ÇØ »õ·Î¿î ½ÇÇèÀ» ½ÃÇàÇÏ¼Ì½À´Ï´Ù.");
-				lines.Add("»ç¶÷µéÀÇ ³ú¿¡ ½Ã¹Ä·¹ÀÌ¼ÇÀ» Àû¿ëÇÏ¿©, ±ØÇÑ »óÈ²¿¡¼­µµ ºò ºê¶ó´õ´Ô¿¡ ´ëÇÑ Ãæ¼º½ÉÀÌ À¯ÁöµÇ´ÂÁö¸¦ È®ÀÎÇÏ°í¡¦");
-				lines.Add("<ÀÌÁ¨ Á¤¸» ÀÚ½ÅÀÇ Ãæ¼º½ÉÀ» È®ÀÎÇÏ±â À§ÇØ ±â»óÃµ¿ÜÇÑ ¹æ¹ıµéÀ» µ¿¿øÇÏ´Â±¸³ª.>");
-				lines.Add("<Á¤¸» Áö±ßÁö±ßÇÏ´Ù.>");
+				lines.Add("<i>ì‘ë…„ ëŒ€ë¹„, ë°°ê¸‰ ì‹ëŸ‰ì€ 15% ì¦ê°€í•˜ì˜€ìŠµë‹ˆë‹¤.</i>");
+				lines.Add("<i>ë¹… ë¸Œë¼ë”ë‹˜ê»˜ì„œ ë³´ì¥í•˜ì‹  ì•ˆì •ì ì¸ ê³µê¸‰ ë•ë¶„ì— ì €í¬ëŠ” ìƒˆë¡­ê³  í–‰ë³µí•œ ì‚¶ì„ ì‚´ì•„ê°€ë©°â€¦</i>");
+				lines.Add("@ìƒˆë¡­ê³  í–‰ë³µí•œ ì‚¶ì´ë¼ëŠ” ë§ì´ ëª‡ ë²ˆì§¸ ë‚˜ì˜¤ëŠ” ê±´ì§€.@");
+				lines.Add("@í’ìš”ë¶€ê°€ ìš”ì¦˜ ìì£¼ ì“°ëŠ” ìƒíˆ¬ì ì¸ ë§ì´êµ°.@");
+				lines.Add("<i>ìœ„ëŒ€í•˜ì‹  ë¹… ë¸Œë¼ë”ë‹˜ê»˜ì„œëŠ” <b>ì‚¬ìƒë²”ì„ ìƒ‰ì¶œí•˜ê¸° ìœ„í•´ ìƒˆë¡œìš´ ì‹¤í—˜ì„ ì‹œí–‰</b>í•˜ì…¨ìŠµë‹ˆë‹¤.</i>");
+				lines.Add("<i>ì‚¬ëŒë“¤ì˜ ë‡Œì— ì‹œë®¬ë ˆì´ì…˜ì„ ì ìš©í•˜ì—¬</i>");
+				lines.Add("<i><b>ê·¹í•œ ìƒí™©ì—ì„œë„ ë¹… ë¸Œë¼ë”ë‹˜ì— ëŒ€í•œ ì¶©ì„±ì‹¬ì´ ìœ ì§€</b>ë˜ëŠ”ì§€ë¥¼ í™•ì¸í•˜ê³ â€¦</i>");
+				lines.Add("@ì´ì   ì •ë§ ìì‹ ì˜ ì¶©ì„±ì‹¬ì„ í™•ì¸í•˜ê¸° ìœ„í•´ ê¸°ìƒì²œì™¸í•œ ë°©ë²•ë“¤ì„ ë™ì›í•˜ëŠ”êµ¬ë‚˜.@");
+				lines.Add("@ì •ë§ ì§€ê¸‹ì§€ê¸‹í•˜ë‹¤.@");
 				break;
 
-			// [Ã¤¸µÅÏ] ¡æ ³¡³ª¸é Stage 4
+			// [ì±„ë§í„´] â†’ ëë‚˜ë©´ Stage 4
 			case NpcId.NPC_004:
-				lines.Add("¡¦");
-				lines.Add("³Ê´Â ³Ê¸¦ ¹Ï³ª? ³ÊÀÇ ¼±ÅÃÀ» ¹Ï³Ä´Â ¸»ÀÌ´Ù.");
-				// (¿©±â¼­ ¼±ÅÃÁö ¿ÀÇÂ ¿¹Á¤)
-				lines.Add("¹¹°¡ µÆµç ³ÊÀÇ ¼±ÅÃÀ» Á¸ÁßÇÏ°Ú´Ù.");
-				lines.Add("±× °á°ú ¶ÇÇÑ ³×°¡ Áû¾îÁö¾î¾ß ÇÏ´Â °Í.");
+				lines.Add("â€¦");
+				lines.Add("ë„ˆëŠ” <b>ë„ˆë¥¼ ë¯¿ë‚˜?</b>");
+				lines.Add("ë„ˆì˜ <b>ì„ íƒì„ ë¯¿ëƒ</b>ëŠ” ë§ì´ë‹¤.");
+				// (ì—¬ê¸°ì„œ ì„ íƒì§€ ì˜¤í”ˆ ì˜ˆì •)
+				lines.Add("<b><size=70>ë­ê°€ ëë“  ë„ˆì˜ ì„ íƒì„ ì¡´ì¤‘í•˜ê² ë‹¤.</size></b>");
+				lines.Add("<b><size=70>ê·¸ ê²°ê³¼ ë˜í•œ ë„¤ê°€ ì§Šì–´ì§€ì–´ì•¼ í•˜ëŠ” ê²ƒ.</size></b>");
 				break;
 		}
 	}
 
-	// ¼±ÅÃÁö Æ®¸®°Å À§Ä¡(±âÈ¹ °íÁ¤)
+	// ì„ íƒì§€ íŠ¸ë¦¬ê±° ìœ„ì¹˜(ê¸°íš ê³ ì •)
 	void SetChoiceTriggerByDesign()
 	{
 		choiceTriggerIndex = npc switch
 		{
-			NpcId.NPC_001 => 0, // Æ¿·Î½¼: Ã¹ ÁÙ ÈÄ
-			NpcId.NPC_002 => 0, // ½Ã¾È: Ã¹ ÁÙ ÈÄ
-			NpcId.NPC_003 => -1, // ÅÚ·¹½ºÅ©¸°: ¼±ÅÃÁö ¾øÀ½
-			NpcId.NPC_004 => 1, // Ã¤¸µÅÏ: µÎ ¹øÂ° ÁÙ ÈÄ
+			NpcId.NPC_001 => 0, // í‹¸ë¡œìŠ¨: ì²« ì¤„ í›„
+			NpcId.NPC_002 => 0, // ì‹œì•ˆ: ì²« ì¤„ í›„
+			NpcId.NPC_003 => -1, // í…”ë ˆìŠ¤í¬ë¦°: ì„ íƒì§€ ì—†ìŒ
+			NpcId.NPC_004 => 2, // ì±„ë§í„´: ë‘ ë²ˆì§¸ ì¤„ í›„
 			_ => -1
 		};
 	}
 
-	// --- Ç¥½Ã ---
+	// --- í‘œì‹œ ---
 	void ShowCurrentLine()
 	{
 		if (index >= lines.Count)
@@ -170,10 +173,7 @@ public class NPCDialogueController : MonoBehaviour
 		string raw = lines[index];
 		bool isPlayer = IsPlayerLine(raw, out string plain);
 
-		// ÀÌ¸§Àº Ç×»ó ¿ŞÂÊ ÅØ½ºÆ® ÇÏ³ª¿¡¸¸ Ç¥½Ã
 		if (nameLeft) nameLeft.text = isPlayer ? playerDisplayName : npcDisplayName;
-
-		// ÇÃ·¹ÀÌ¾î ´ë»çÀÏ ¶§¸¸ ÇàÀ» ÁÂ¿ì ¹İÀü(ÅØ½ºÆ®´Â °¡µ¶¼º À¯Áö)
 		SetFlipped(isPlayer);
 
 		if (typingCo != null) StopCoroutine(typingCo);
@@ -188,7 +188,7 @@ public class NPCDialogueController : MonoBehaviour
 
 	public void OnClickBackground()
 	{
-		// ¼±ÅÃÁö Æ®¸®°Å ÁöÁ¡¿¡¼­ Å¬¸¯ ¡æ ¼±ÅÃÁö ¿ÀÇÂ
+		// ì„ íƒì§€ íŠ¸ë¦¬ê±° ì§€ì ì—ì„œ í´ë¦­ â†’ ì„ íƒì§€ ì˜¤í”ˆ
 		if (choiceTriggerIndex >= 0 && index == choiceTriggerIndex && !isTyping)
 		{
 			OpenChoice();
@@ -199,28 +199,26 @@ public class NPCDialogueController : MonoBehaviour
 		else Next();
 	}
 
-	// === ¼±ÅÃÁö ===
+	// === ì„ íƒì§€ ===
 	void OpenChoice()
 	{
-		// ´ë»ç °ãÄ§ ¹æÁö
 		if (dialogueText) dialogueText.text = string.Empty;
 
-		// NPCº° ¼±ÅÃÁö ¶óº§
 		if (choice1Text && choice2Text)
 		{
 			switch (npc)
 			{
-				case NpcId.NPC_001: // Æ¿·Î½¼
-					choice1Text.SetText("1) ¹¹¶ó°í?");
-					choice2Text.SetText("2) ºòºê¶ó´õ´ÔÀº À§´ëÇÏ´Ù!!");
+				case NpcId.NPC_001: // í‹¸ë¡œìŠ¨
+					choice1Text.SetText("1) ë­ë¼ê³ ?");
+					choice2Text.SetText("2) ë¹…ë¸Œë¼ë”ë‹˜ì€ ìœ„ëŒ€í•˜ë‹¤!!");
 					break;
-				case NpcId.NPC_002: // ½Ã¾È
-					choice1Text.SetText("1) ÀÏÀ» Çß¾ú³×. ¿µÈ­·Î º¼ ¼ö ÀÖ°ÚÁö.");
-					choice2Text.SetText("2) Á¤¸» º¼¸¸ÇÑ ±³¼öÇüÀÌ¾ú¾î.");
+				case NpcId.NPC_002: // ì‹œì•ˆ
+					choice1Text.SetText("1) ì¼ì„ í–ˆì—ˆë„¤. ì˜í™”ë¡œ ë³¼ ìˆ˜ ìˆê² ì§€.");
+					choice2Text.SetText("2) ì •ë§ ë³¼ë§Œí•œ êµìˆ˜í˜•ì´ì—ˆì–´.");
 					break;
-				case NpcId.NPC_004: // Ã¤¸µÅÏ
-					choice1Text.SetText("1) ±×·¡");
-					choice2Text.SetText("2) ¾Æ´Ï");
+				case NpcId.NPC_004: // ì±„ë§í„´
+					choice1Text.SetText("1) ê·¸ë˜");
+					choice2Text.SetText("2) ì•„ë‹ˆ");
 					break;
 			}
 		}
@@ -232,36 +230,39 @@ public class NPCDialogueController : MonoBehaviour
 	{
 		SetChoiceVisible(false);
 
-		// ¼±ÅÃ¿¡ µû¸¥ 1ÁÙ »ğÀÔ(¿¬Ãâ¿ë)
-		string insert = GetInsertedLineForChoice(which);
-		if (!string.IsNullOrEmpty(insert))
+		var inserts = GetInsertedLinesForChoice(which);
+		if (inserts != null && inserts.Count > 0)
 		{
-			lines.Insert(index + 1, insert);
-			Next(); // »ğÀÔÇÑ ÁÙ Ãâ·Â
+			for (int k = 0; k < inserts.Count; k++)
+				lines.Insert(index + 1 + k, inserts[k]);
+
+			Next(); // ì²« ì‚½ì… ì¤„ë¶€í„° ì¶œë ¥
 		}
 		else
 		{
-			// »ğÀÔÇÒ ÁÙÀÌ ¾ø´Ù¸é ¹Ù·Î ÁøÇà
 			Next();
 		}
 	}
 
-	string GetInsertedLineForChoice(int which)
+	List<string> GetInsertedLinesForChoice(int which)
 	{
 		switch (npc)
 		{
-			case NpcId.NPC_001: // Æ¿·Î½¼: ¼±ÅÃ ÈÄ 'ÇÃ·¹ÀÌ¾î' ´ë»ç·Î ÅëÀÏ
-				return which == 1
-					? "<¹¹¶ó°í?>"
-					: "<ºòºê¶ó´õ´ÔÀº À§´ëÇÏ´Ù!!>";
+			case NpcId.NPC_001: // í‹¸ë¡œìŠ¨: í”Œë ˆì´ì–´ â†’ í‹¸ë¡œìŠ¨ ì‘ë‹µ
+				if (which == 1)
+					return new List<string> { "@ë­ë¼ê³ ?@", "ì§€ê¸ˆ ë­ë¼ê³  í–ˆë‚˜?" };
+				else
+					return new List<string> { "@ë¹…ë¸Œë¼ë”ë‹˜ì€ ìœ„ëŒ€í•˜ë‹¤!!@", "ìš”ì¦˜ ì¼ì€ ì˜ ë˜ì–´ê°€ë‚˜?" };
 
-			case NpcId.NPC_002: // ½Ã¾È: ÇÃ·¹ÀÌ¾î ÀÀ´ä
-				return which == 1
-					? "<ÀÏÀ» Çß¾ú³×. ¿µÈ­·Î º¼ ¼ö ÀÖ°ÚÁö.>"
-					: "<Á¤¸» º¼¸¸ÇÑ ±³¼öÇüÀÌ¾ú¾î.>";
+			case NpcId.NPC_002: // ì‹œì•ˆ: í”Œë ˆì´ì–´ ì‘ë‹µë§Œ
+				return new List<string>
+				{
+					which == 1 ? "@ì¼ì„ í–ˆì—ˆë„¤. ì˜í™”ë¡œ ë³¼ ìˆ˜ ìˆê² ì§€.@"
+							   : "@ì •ë§ ë³¼ë§Œí•œ êµìˆ˜í˜•ì´ì—ˆì–´.@"
+				};
 
-			case NpcId.NPC_004: // Ã¤¸µÅÏ: ÇÃ·¹ÀÌ¾î ÀÀ´ä
-				return which == 1 ? "<±×·¡>" : "<¾Æ´Ï>";
+			case NpcId.NPC_004: // ì±„ë§í„´: í”Œë ˆì´ì–´ ì‘ë‹µë§Œ
+				return new List<string> { which == 1 ? "@ê·¸ë˜@" : "@ì•„ë‹ˆ@" };
 		}
 		return null;
 	}
@@ -274,18 +275,20 @@ public class NPCDialogueController : MonoBehaviour
 			choiceGroup.interactable = v;
 			choiceGroup.blocksRaycasts = v;
 		}
-		if (backgroundClick) backgroundClick.interactable = !v; // ¼±ÅÃÁö ¿­¸®¸é ¹è°æ Å¬¸¯ Â÷´Ü
+		if (backgroundClick) backgroundClick.interactable = !v; // ì„ íƒì§€ ì—´ë¦¬ë©´ ë°°ê²½ í´ë¦­ ì°¨ë‹¨
 	}
 
-	// --- À¯Æ¿ ---
+	// --- ìœ í‹¸ ---
+	// í”Œë ˆì´ì–´ ëŒ€ì‚¬: ë¬¸ìì—´ì´ @...@ ë¡œ ê°ì‹¸ì ¸ ìˆìœ¼ë©´ true
 	bool IsPlayerLine(string src, out string stripped)
 	{
-		if (!string.IsNullOrEmpty(src) && src.Length >= 2 && src[0] == '<' && src[^1] == '>')
+		if (!string.IsNullOrEmpty(src) && src.Length >= 2 && src[0] == '@' && src[^1] == '@')
 		{
-			stripped = src.Substring(1, src.Length - 2);
+			// @@ â†’ @ ì´ìŠ¤ì¼€ì´í”„ í—ˆìš© (ì›ì¹˜ ì•Šìœ¼ë©´ Replace ì œê±°)
+			stripped = src.Substring(1, src.Length - 2).Replace("@@", "@");
 			return true;
 		}
-		stripped = src;
+		stripped = src; // NPC ëŒ€ì‚¬(ë¦¬ì¹˜íƒœê·¸ í¬í•¨ ê°€ëŠ¥)
 		return false;
 	}
 
@@ -331,13 +334,13 @@ public class NPCDialogueController : MonoBehaviour
 		dialogueText.text = currentFullRich ?? dialogueText.text;
 	}
 
-	// --- ¾À ÀüÈ¯ ---
+	// --- ì”¬ ì „í™˜ ---
 	void FinishSequence()
 	{
 		if (isTransitioning) return;
 		isTransitioning = true;
 
-		int next = GetDefaultNextStageByNpc(); // 1/2/3/4 °íÁ¤ ¸ÅÇÎ
+		int next = GetDefaultNextStageByNpc(); // 1/2/3/4 ê³ ì • ë§¤í•‘
 		if (next > 0)
 		{
 			PlayerPrefs.SetInt(KEY_NEXT_STAGE, next);
@@ -355,18 +358,18 @@ public class NPCDialogueController : MonoBehaviour
 	{
 		switch (npc)
 		{
-			case NpcId.NPC_001: return 1; // Æ¿·Î½¼
-			case NpcId.NPC_002: return 2; // ½Ã¾È
-			case NpcId.NPC_003: return 3; // ÅÚ·¹½ºÅ©¸°
-			case NpcId.NPC_004: return 4; // Ã¤¸µÅÏ
+			case NpcId.NPC_001: return 1; // í‹¸ë¡œìŠ¨
+			case NpcId.NPC_002: return 2; // ì‹œì•ˆ
+			case NpcId.NPC_003: return 3; // í…”ë ˆìŠ¤í¬ë¦°
+			case NpcId.NPC_004: return 4; // ì±„ë§í„´
 			default: return 0;
 		}
 	}
 
-	// === ÁÂ¿ì ¹İÀü(ÇÃ·¹ÀÌ¾î ´ë»ç Àü¿ë) ===
+	// === ì¢Œìš° ë°˜ì „(í”Œë ˆì´ì–´ ëŒ€ì‚¬ ì „ìš©) ===
 	void SetFlipped(bool flipped)
 	{
-		// ºÎ¸ğ ÄÁÅ×ÀÌ³Ê´Â ÁÂ¿ì ¹İÀü
+		// ë¶€ëª¨ ì»¨í…Œì´ë„ˆ ë°˜ì „
 		if (talkRowRoot)
 		{
 			var s = talkRowRoot.localScale;
@@ -374,7 +377,7 @@ public class NPCDialogueController : MonoBehaviour
 			talkRowRoot.localScale = s;
 		}
 
-		// ÅØ½ºÆ®´Â ´Ù½Ã ÇÑ ¹ø ¹İÀüÇØ¼­ ±ÛÀÚ°¡ °Å²Ù·Î º¸ÀÌÁö ¾Ê°Ô
+		// í…ìŠ¤íŠ¸ëŠ” ë‹¤ì‹œ ë°˜ì „í•´ì„œ ì •ìƒ ì½ê¸°
 		if (nameLeft)
 		{
 			var s = nameLeft.rectTransform.localScale;
