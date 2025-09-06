@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -21,17 +22,16 @@ public class GameManager : MonoBehaviour
     #endregion
 
     [Header("Game Settings")]
-    [SerializeField] private int initialLives = 4;
     [SerializeField] private StageDatas stages;         // 스테이지 정보
     [SerializeField] private int currentStageIndex;
+    public int CurrentStageIndex => currentStageIndex;
 
     [SerializeField] private StageController stageController; // StageController 스크립트 참조
     [SerializeField] private EyeComponent[] eyeObjects = new EyeComponent[2];
     [SerializeField] private FullEyeController fullEyeController;
 
-
     [Header("UI Refs")]
-    [SerializeField] private GameObject gameOverPanel;
+    [SerializeField] private UI_Main mainUI;
 
     [field : SerializeField] public bool IsGameActive { get; private set; }
 
@@ -59,11 +59,7 @@ public class GameManager : MonoBehaviour
     public void StartGame()
     {
         currentStageIndex = 0;
-        curStage = stages.stageDatas[currentStageIndex];
-
-        lives = initialLives;
-        IsGameActive = true;
-
+        
         ResetEyes();
 
         LoadStage(currentStageIndex);
@@ -79,8 +75,13 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    private void LoadStage(int stageIndex)
+    public void LoadStage(int stageIndex)
     {
+        curStage = stages.stageDatas[currentStageIndex];
+        IsGameActive = true;
+        lives = curStage.AnswerCount;
+        mainUI.ResetUI();
+        mainUI.SetText(curStage);
         stageController.SetupStage(curStage);
     }
 
@@ -89,7 +90,7 @@ public class GameManager : MonoBehaviour
         if (!IsGameActive) return;
 
         lives--;
-        int deathCount = initialLives - lives;
+        int deathCount = curStage.AnswerCount - lives;
 
         IEnumerator animationToPlay = null;
         switch (deathCount)
@@ -113,16 +114,17 @@ public class GameManager : MonoBehaviour
             animationQueue.Enqueue(animationToPlay);
         }
 
-        IEnumerator gameOver = null;
+        IEnumerator gameFailSequence = null;
 
         if (lives <= 0)
         {
-            gameOver = GameOver();
+            GameOver();
+            gameFailSequence = GameFailSequence();
         }
 
-        if (gameOver != null)
+        if (gameFailSequence != null)
         {
-            animationQueue.Enqueue(gameOver);
+            animationQueue.Enqueue(gameFailSequence);
         }
 
         if (!isProcessingQueue)
@@ -196,21 +198,58 @@ public class GameManager : MonoBehaviour
         }
     }
 
+    [ContextMenu("Stage Clear")]
     public void StageClear()
     {
         if (!IsGameActive) return;
-
+        GameOver();
         currentStageIndex++;
-        LoadStage(currentStageIndex);
+
+        if (currentStageIndex >= stages.stageDatas.Count)
+        {
+            StartCoroutine(EndingSequence());
+        }
+        else
+        {
+            StartCoroutine(StageClearSequence());
+        }
     }
 
-    private IEnumerator GameOver()
+    private IEnumerator StageClearSequence()
+    {
+        fullEyeController.gameObject.SetActive(false);
+        // 3초 뒤에 정답 글자 fade in
+        yield return new WaitForSeconds(3f);
+        yield return mainUI.FadeCanvasGroup(0f, 3f);
+        // 지뢰 글자가 정돈된 상태로 5초간 떠있음
+        mainUI.ShowAnswerText();
+        yield return new WaitForSeconds(5f);
+        // n 번째 암호입니다 라는 글자 띄우고 3초 대기
+        mainUI.ShowAquireText(currentStageIndex);
+        yield return new WaitForSeconds(3f);
+        mainUI.HideAquireText();
+        mainUI.HideAnswerText();
+        yield return new WaitForSeconds(2f);
+        mainUI.ShowGameClearUI();
+    }
+
+    private IEnumerator EndingSequence()
+    {
+        yield return null;
+    }
+
+    private IEnumerator GameFailSequence()
     {
         yield return null;
         Debug.Log("Game Over");
 
-        IsGameActive = false;
         fullEyeController.FullEyeSee();
+    }
+
+    private void GameOver()
+    {
+        IsGameActive = false;
+        mainUI.DisableGameTextClick();
     }
 
     private void BlinkEye()
@@ -226,13 +265,19 @@ public class GameManager : MonoBehaviour
     }
     private void ShowGameOverPanel()
     {
-        StartCoroutine(WaitAndShowGameOverPanel(0.5f));
+        StartCoroutine(WaitAndShowGameOverPanel(2f));
     }
 
     private IEnumerator WaitAndShowGameOverPanel(float waitTime)
     {
         yield return new WaitForSeconds(waitTime);
-        gameOverPanel.SetActive(true);
+        mainUI.ShowGameOverUI();
     }
-
+    public void Restart()
+    {
+        IsGameActive = true;
+        fullEyeController.gameObject.SetActive(true);
+        ResetEyes();
+        LoadStage(currentStageIndex);
+    }
 }

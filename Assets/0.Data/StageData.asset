@@ -14,10 +14,31 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   stageDatas:
   - FullSentence: BIG BROTHER IS WATCHING YOU. TRUST THE SYSTEM, BE HAPPY.
-    AnswerWord: OBEY
+    AnswerWord: START
+    KoreanSentence: "\uBE45 \uBE0C\uB77C\uB354\uAC00 \uB2F9\uC2E0\uC744 \uC8FC\uC2DC\uD558\uACE0
+      \uC788\uB2E4. \uCCB4\uC81C\uB97C \uBBFF\uACE0, \uD589\uBCF5\uD558\uB77C."
+    HintCount: 5
+    AnswerCount: 5
+  - FullSentence: IGNORANCE IS STERNGTH. DOUBT IS TREASON AGAINST ORDER. PEACE COMES
+      THROUGH CONTROL.
+    AnswerWord: ESCAPE
+    KoreanSentence: "\uBB34\uC9C0\uB294 \uD798\uC774\uB2E4. \uC758\uC2EC\uC740 \uC9C8\uC11C\uC5D0
+      \uB300\uD55C \uBC18\uC5ED\uC774\uB2E4. \uD3C9\uD654\uB294 \uD1B5\uC81C\uB97C
+      \uD1B5\uD574 \uC628\uB2E4."
+    HintCount: 5
+    AnswerCount: 6
   - FullSentence: 
     AnswerWord: 
+    KoreanSentence: 
+    HintCount: 0
+    AnswerCount: 0
   - FullSentence: 
     AnswerWord: 
+    KoreanSentence: 
+    HintCount: 0
+    AnswerCount: 0
   - FullSentence: 
     AnswerWord: 
+    KoreanSentence: 
+    HintCount: 0
+    AnswerCount: 0

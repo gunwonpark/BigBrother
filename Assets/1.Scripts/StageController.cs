@@ -30,14 +30,13 @@ public class StageController : MonoBehaviour
     [SerializeField] private Camera mainCamera;                 // PostProceesing을 적용할 가능성이 있다
     
     private List<CharInfo> charInfos = new List<CharInfo>();              // 각 글자의 상태 정보 저장 배열
-    private int removableLetterCount;          // 남은 지뢰 개수
+    [SerializeField] private int removableLetterCount;          // 남은 지뢰 개수
 
     private const float DRAG_THRESHOLD = 10f;  // 드래그로 간주할 최소 픽셀 거리
     private Vector2 mouseDownPosition;         // 마우스를 눌렀을 때의 좌표 저장
     private int potentialClickIndex = -1;      // 클릭 후보가 된 글자의 인덱스
 
     private int previousHoverIndex = -1;       // 이전 프레임에서 호버했던 글자의 인덱스
-    private bool isUIDirty = false;            // '더티 플래그'로 화면 업데이트 최적화
     private List<int> highlightedIndices = new List<int>(); // 현재 핑크색으로 강조된 인덱스 리스트
 
     // 스테이지 데이터로 초기 설정
@@ -45,7 +44,7 @@ public class StageController : MonoBehaviour
     {
         string fullSentence = data.FullSentence;
         string answerWord = data.AnswerWord;
-        
+
         // 문장 전체를 CharInfo 배열로 초기화
         charInfos.Clear();
         charInfos.AddRange(fullSentence.Select(c => new CharInfo(c)));
@@ -54,6 +53,8 @@ public class StageController : MonoBehaviour
         for (int i = 0; i < answerWord.Length; i++)
         {
             char key = answerWord[i];
+            if (!char.IsLetter(key)) continue;
+
             List<int> positions = new List<int>();
 
             for(int j = 0; j < fullSentence.Length; j++)
@@ -72,7 +73,7 @@ public class StageController : MonoBehaviour
         }
 
         // 제거해야 할 글자 계산
-        removableLetterCount = charInfos.Count(item => item.IsMine == false && !char.IsLetter(item.Character));
+        removableLetterCount = charInfos.Count(item => item.IsMine == false && char.IsLetter(item.Character));
 
         // 무한 스크롤 설정
         for (int i = 0; i < sentenceText.Length; i++)
@@ -200,6 +201,7 @@ public class StageController : MonoBehaviour
         {
             info.IsRemoved = true;
             removableLetterCount--;
+            
             UpdateDisplayText();
 
             // 제거해야 할 글자를 모두 제거했으면 승리
@@ -243,6 +245,33 @@ public class StageController : MonoBehaviour
             info.HintState = finalMineRange;
             UpdateDisplayText();
         }
+        // 지뢰가 없다면 그 범위의 글자들 제거처리
+        else
+        {
+            charInfos[index].IsRemoved = true;
+            removableLetterCount--;
+
+            foreach (int idx in GetLetterIndicesInRange(index, -1, 2))
+            {
+                charInfos[idx].IsRemoved = true;
+                removableLetterCount--;
+            }
+
+            foreach (int idx in GetLetterIndicesInRange(index, 1, 2))
+            {
+                charInfos[idx].IsRemoved = true;
+                removableLetterCount--;
+            }
+
+            UpdateDisplayText();
+
+            // 제거해야 할 글자를 모두 제거했으면 승리
+            if (removableLetterCount <= 0)
+            {
+                GameManager.Instance.StageClear();
+            }
+        }
+
     }
 
     private int FindMineInRange(int startIndex, int direction, int maxLetterChecks)

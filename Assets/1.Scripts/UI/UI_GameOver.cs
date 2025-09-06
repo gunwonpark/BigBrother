@@ -1,16 +1,19 @@
+using System;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class UI_GameOver : MonoBehaviour
 {
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
-    void Start()
+    [SerializeField] private Button restartButton;
+
+    private void Start()
     {
-        
+        restartButton.onClick.AddListener(OnClickRestart);
     }
 
-    // Update is called once per frame
-    void Update()
+    private void OnClickRestart()
     {
-        
+        GameManager.Instance.Restart();
+        this.gameObject.SetActive(false);
     }
 }
