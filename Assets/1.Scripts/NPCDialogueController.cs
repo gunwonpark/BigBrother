@@ -10,6 +10,7 @@ public class NPCDialogueController : MonoBehaviour
 	private const string KEY_NEXT_STAGE = "NextStage";
 
 	public enum NpcId { NPC_001, NPC_002, NPC_003, NPC_004 }
+	// 001=틸로슨, 002=시안, 003=텔레스크린, 004=채링턴
 
 	[Header("Which NPC")]
 	[SerializeField] private NpcId npc = NpcId.NPC_001;
@@ -22,23 +23,18 @@ public class NPCDialogueController : MonoBehaviour
 	[SerializeField] private bool usePunctuationHold = true;
 
 	[Header("UI Refs")]
-	[SerializeField] private GameObject nameLeftBox;
-	[SerializeField] private GameObject nameRightBox;
-	[SerializeField] private TMP_Text nameLeft;
-	[SerializeField] private TMP_Text nameRight;
+	[SerializeField] private RectTransform talkRowRoot; // ← 이름+대사 부모(좌우 반전 대상)
+	[SerializeField] private TMP_Text nameLeft;         // ← 항상 여기 하나만 사용
 	[SerializeField] private TMP_Text dialogueText;
-	[SerializeField] private Button backgroundClick;
+	[SerializeField] private Button backgroundClick;    // 화면 전체 클릭 캐쳐
 
-	[Header("Choice (for NPC_003)")]
-	//[SerializeField] private CanvasGroup choiceGroup;
-	//[SerializeField] private Button choice1Button; // 1) 뭐라고?
-	//[SerializeField] private Button choice2Button; // 2) 그렇구나.
-	//[SerializeField] private TMP_Text choice1Label;
-	//[SerializeField] private TMP_Text choice2Label;
+	[Header("Choice (Text Hover)")]
+	[SerializeField] private CanvasGroup choiceGroup;   // 선택지 그룹
+	[SerializeField] private ChoiceHoverText choice1Text;
+	[SerializeField] private ChoiceHoverText choice2Text;
 
 	[Header("Navigation")]
-	[SerializeField] private string nextSceneOnFinish = "MainScene"; // 001/002/004 끝나면 가는 씬
-	[SerializeField] private string stageSceneName = "MainScene"; // 스테이지 진입 씬
+	[SerializeField] private string nextSceneOnFinish = "MainScene"; // 끝나면 가는 씬 (스테이지 진입)
 
 	// 내부 상태
 	private readonly List<string> lines = new();
@@ -48,75 +44,118 @@ public class NPCDialogueController : MonoBehaviour
 	private string currentFullRich;
 	private bool isTransitioning;
 
+	// 선택지 트리거 인덱스(없으면 -1)
+	private int choiceTriggerIndex = -1;
+
+	// Choice용 메서드 캐시
+	private void OnChoose1() => OnChoose(1);
+	private void OnChoose2() => OnChoose(2);
+
 	void Awake()
 	{
+		// 기본 이름 자동 세팅(비워두면)
+		if (string.IsNullOrWhiteSpace(npcDisplayName))
+		{
+			npcDisplayName = npc switch
+			{
+				NpcId.NPC_001 => "틸로슨",
+				NpcId.NPC_002 => "시안",
+				NpcId.NPC_003 => "텔레스크린",
+				NpcId.NPC_004 => "채링턴",
+				_ => "NPC"
+			};
+		}
+
 		BuildLinesInline();
+		SetChoiceTriggerByDesign();
+
 		index = 0;
 
 		if (backgroundClick) backgroundClick.onClick.AddListener(OnClickBackground);
-		//if (choice1Button) choice1Button.onClick.AddListener(() => OnChoose(1));
-		//if (choice2Button) choice2Button.onClick.AddListener(() => OnChoose(2));
-		//SetChoiceVisible(false);
+		if (choice1Text) choice1Text.Clicked += OnChoose1;
+		if (choice2Text) choice2Text.Clicked += OnChoose2;
 
+		SetChoiceVisible(false);
 		ShowCurrentLine();
 	}
 
 	void OnDestroy()
 	{
 		if (backgroundClick) backgroundClick.onClick.RemoveListener(OnClickBackground);
-		//if (choice1Button) choice1Button.onClick.RemoveAllListeners();
-		//if (choice2Button) choice2Button.onClick.RemoveAllListeners();
+		if (choice1Text) choice1Text.Clicked -= OnChoose1;
+		if (choice2Text) choice2Text.Clicked -= OnChoose2;
 	}
 
-	// --- 인라인 대사 구성 ---
+	// --- 인라인 대사(새 기획) ---
 	void BuildLinesInline()
 	{
 		lines.Clear();
+
 		switch (npc)
 		{
+			// [틸로슨] → 끝나면 Stage 1
 			case NpcId.NPC_001:
-				lines.Add("빅 브라더님은 위대하다!!");
-				lines.Add("안녕?");
-				lines.Add("네가 옴으로써 이곳은 비로소 움직이기 시작했네.");
-				lines.Add("반가워.");
-				lines.Add("<이곳은 어디지?>");
-				lines.Add("이곳은 말이지.");
-				lines.Add("위대하신 빅 브라더님의 공간이지.");
-				lines.Add("그 분은 정말 대단하신 분이야.");
-				lines.Add("우리 모두를 숨쉬게 만들고 살 수 있게 해주니까 말이야.");
-				lines.Add("<빅 브라더가 누구길래 그러는거지?>");
-				lines.Add("빅 브라더 님이 누군지 알고 싶어?");
-				lines.Add("그러면 빅 브라더님이 시험해내는 것들을 모두 풀어봐.");
-				lines.Add("그러면 그 분을 알 수 있을거야.");
-				lines.Add("그럼 그 시험을 통과하러 갈 준비가 됐어?");
-				lines.Add("<준비됐어.>");
+				lines.Add("빅 브라더 님은 위대하다!!");
+				// (여기서 선택지 오픈 예정)
+				lines.Add("<그래 이 모든 건 빅 브라더님의 뜻으로.>");
+				lines.Add("그나저나 어디로 가나?");
+				lines.Add("<아 이쪽에 잠시 볼일이 있어서…>");
+				lines.Add("그래 그 쪽에 사상 경찰이 정말 많이 있더라고.");
+				lines.Add("뭐 중요한 게 있나 보더군.");
+				lines.Add("<(대장 [          ]이 남겨둔 암호를 지키는 자들인가보군. 쉽지 않겠는걸.)>");
+				lines.Add("<그렇군. 다들 고생하시네.>");
+				lines.Add("그래. 이 모든 건 빅 브라더님을 위하여.");
 				break;
 
+			// [시안] → 끝나면 Stage 2
 			case NpcId.NPC_002:
-				lines.Add("빅 브라더 님은 위대하다!!");
-				lines.Add("어때 즐거워?");
-				lines.Add("긴장감, 그리고 두뇌가 회전하는 게 느껴지지 않아?");
-				lines.Add("이 모든 건 빅브라더님의 뜻이라고~");
-				lines.Add("<그 분의 뜻이 뭔데?>");
-				lines.Add("그건 끝까지 가보면 알 수 있어.");
-				lines.Add("중간에 포기하면 알 수 없을거야. 그 분의 뜻을.");
-				lines.Add("걱정은 안 해도 돼.");
-				lines.Add("널 행복하게 해줄 거라는 건 분명하니까 걱정하지 말라고~");
+				lines.Add("어제 사상범들이 교수형에 처하는 걸 봤나?");
+				// (여기서 선택지 오픈 예정)
+				lines.Add("그래 감히 빅 브라더님의 뜻을 거역하는 이들이라니");
+				lines.Add("교수형을 당해도 모자르지 않아 보여.");
+				lines.Add("그렇지 않은가?");
+				lines.Add("<그렇지.>");
+				lines.Add("<(무고한 우리 동료들이 또 죽고 말았구나.)>");
+				lines.Add("그나저나 어딜 갔다왔길래 그리 땀 투성인가?");
+				lines.Add("뭐 어디 운동이라도 하고 왔는가?");
+				lines.Add("<아무것도 아닐세.>");
+				lines.Add("시시하군. 아무튼 이 모든 건 빅 브라더님을 위하여.");
 				break;
 
+			// [텔레스크린] → 선택지 없음, 끝나면 Stage 3
 			case NpcId.NPC_003:
-				lines.Add("빅 브라더 님은 위대하다!!");
-				lines.Add("그거 알아?");
-				lines.Add("빅 브라더님은 [      ]이라고도 불려");
-				lines.Add("<1) 뭐라고? / 2) 그렇구나.>");
+				lines.Add("작년 대비, 배급 식량은 15% 증가하였습니다.");
+				lines.Add("빅 브라더님께서 보장하신 안정적인 공급 덕분에 저희는 새롭고 행복한 삶을 살아가며…");
+				lines.Add("<새롭고 행복한 삶이라는 말이 몇 번째 나오는 건지.>");
+				lines.Add("<풍요부가 요즘 자주 쓰는 상투적인 말이군.>");
+				lines.Add("위대하신 빅 브라더님께서는 사상범을 색출하기 위해 새로운 실험을 시행하셨습니다.");
+				lines.Add("사람들의 뇌에 시뮬레이션을 적용하여, 극한 상황에서도 빅 브라더님에 대한 충성심이 유지되는지를 확인하고…");
+				lines.Add("<이젠 정말 자신의 충성심을 확인하기 위해 기상천외한 방법들을 동원하는구나.>");
+				lines.Add("<정말 지긋지긋하다.>");
 				break;
 
+			// [채링턴] → 끝나면 Stage 4
 			case NpcId.NPC_004:
-				lines.Add("빅 브라더 님은 위대하다!!");
-				lines.Add("넌 곧 빅브라더님의 뜻을 알게 되겠네.");
-				lines.Add("어때? 진실을 알 생각에 설레?");
+				lines.Add("…");
+				lines.Add("너는 너를 믿나? 너의 선택을 믿냐는 말이다.");
+				// (여기서 선택지 오픈 예정)
+				lines.Add("뭐가 됐든 너의 선택을 존중하겠다.");
+				lines.Add("그 결과 또한 네가 짊어지어야 하는 것.");
 				break;
 		}
+	}
+
+	// 선택지 트리거 위치(기획 고정)
+	void SetChoiceTriggerByDesign()
+	{
+		choiceTriggerIndex = npc switch
+		{
+			NpcId.NPC_001 => 0, // 틸로슨: 첫 줄 후
+			NpcId.NPC_002 => 0, // 시안: 첫 줄 후
+			NpcId.NPC_003 => -1, // 텔레스크린: 선택지 없음
+			NpcId.NPC_004 => 1, // 채링턴: 두 번째 줄 후
+			_ => -1
+		};
 	}
 
 	// --- 표시 ---
@@ -124,17 +163,18 @@ public class NPCDialogueController : MonoBehaviour
 	{
 		if (index >= lines.Count)
 		{
-			FinishSequence(); // 001/002/004는 여기서 자동 스테이지 저장+로드
+			FinishSequence();
 			return;
 		}
 
 		string raw = lines[index];
 		bool isPlayer = IsPlayerLine(raw, out string plain);
 
-		nameLeftBox.gameObject.SetActive(!isPlayer);
-		nameRightBox.gameObject.SetActive(isPlayer);
-		if (!isPlayer) nameLeft.text = npcDisplayName;
-		else nameRight.text = playerDisplayName;
+		// 이름은 항상 왼쪽 텍스트 하나에만 표시
+		if (nameLeft) nameLeft.text = isPlayer ? playerDisplayName : npcDisplayName;
+
+		// 플레이어 대사일 때만 행을 좌우 반전(텍스트는 가독성 유지)
+		SetFlipped(isPlayer);
 
 		if (typingCo != null) StopCoroutine(typingCo);
 		typingCo = StartCoroutine(TypeRichText(dialogueText, plain));
@@ -148,47 +188,94 @@ public class NPCDialogueController : MonoBehaviour
 
 	public void OnClickBackground()
 	{
-		// NPC_003: 선택지 라인(4번째) 완료 후 클릭이면 선택창 오픈
-		//if (npc == NpcId.NPC_003 && index == 3 && !isTyping)
-		//{
-		//	OpenChoice();
-		//	return;
-		//}
+		// 선택지 트리거 지점에서 클릭 → 선택지 오픈
+		if (choiceTriggerIndex >= 0 && index == choiceTriggerIndex && !isTyping)
+		{
+			OpenChoice();
+			return;
+		}
 
 		if (isTyping) ForceComplete();
 		else Next();
 	}
 
-	// --- 선택지 (NPC_003 전용) ---
-	//void OpenChoice()
-	//{
-	//	SetChoiceVisible(true);
-	//	if (choice1Label) choice1Label.text = "1) 뭐라고?";
-	//	if (choice2Label) choice2Label.text = "2) 그렇구나.";
-	//}
+	// === 선택지 ===
+	void OpenChoice()
+	{
+		// 대사 겹침 방지
+		if (dialogueText) dialogueText.text = string.Empty;
 
-	//void OnChoose(int which)
-	//{
-	//	SetChoiceVisible(false);
+		// NPC별 선택지 라벨
+		if (choice1Text && choice2Text)
+		{
+			switch (npc)
+			{
+				case NpcId.NPC_001: // 틸로슨
+					choice1Text.SetText("1) 뭐라고?");
+					choice2Text.SetText("2) 빅브라더님은 위대하다!!");
+					break;
+				case NpcId.NPC_002: // 시안
+					choice1Text.SetText("1) 일을 했었네. 영화로 볼 수 있겠지.");
+					choice2Text.SetText("2) 정말 볼만한 교수형이었어.");
+					break;
+				case NpcId.NPC_004: // 채링턴
+					choice1Text.SetText("1) 그래");
+					choice2Text.SetText("2) 아니");
+					break;
+			}
+		}
 
-	//	if (which == 1)
-	//	{
-	//		// 한 줄 더 출력 후 스테이지3로
-	//		lines.Insert(index + 1, "1) 빅 브라더님은 [      ]이라고도 불려");
-	//		Next(); // 삽입한 줄을 타이핑으로 보여줌 → 끝나면 TypeRichText에서 GoStage(3)
-	//	}
-	//	else
-	//	{
-	//		GoStage(3); // 바로 스테이지3
-	//	}
-	//}
+		SetChoiceVisible(true);
+	}
 
-	//void SetChoiceVisible(bool v)
-	//{
-	//	if (!choiceGroup) return;
-	//	choiceGroup.alpha = v ? 1f : 0f;
-	//	choiceGroup.interactable = choiceGroup.blocksRaycasts = v;
-	//}
+	void OnChoose(int which)
+	{
+		SetChoiceVisible(false);
+
+		// 선택에 따른 1줄 삽입(연출용)
+		string insert = GetInsertedLineForChoice(which);
+		if (!string.IsNullOrEmpty(insert))
+		{
+			lines.Insert(index + 1, insert);
+			Next(); // 삽입한 줄 출력
+		}
+		else
+		{
+			// 삽입할 줄이 없다면 바로 진행
+			Next();
+		}
+	}
+
+	string GetInsertedLineForChoice(int which)
+	{
+		switch (npc)
+		{
+			case NpcId.NPC_001: // 틸로슨: 선택 후 '플레이어' 대사로 통일
+				return which == 1
+					? "<뭐라고?>"
+					: "<빅브라더님은 위대하다!!>";
+
+			case NpcId.NPC_002: // 시안: 플레이어 응답
+				return which == 1
+					? "<일을 했었네. 영화로 볼 수 있겠지.>"
+					: "<정말 볼만한 교수형이었어.>";
+
+			case NpcId.NPC_004: // 채링턴: 플레이어 응답
+				return which == 1 ? "<그래>" : "<아니>";
+		}
+		return null;
+	}
+
+	void SetChoiceVisible(bool v)
+	{
+		if (choiceGroup)
+		{
+			choiceGroup.alpha = v ? 1f : 0f;
+			choiceGroup.interactable = v;
+			choiceGroup.blocksRaycasts = v;
+		}
+		if (backgroundClick) backgroundClick.interactable = !v; // 선택지 열리면 배경 클릭 차단
+	}
 
 	// --- 유틸 ---
 	bool IsPlayerLine(string src, out string stripped)
@@ -211,7 +298,6 @@ public class NPCDialogueController : MonoBehaviour
 		int i = 0;
 		while (i < content.Length)
 		{
-			// TMP 리치태그는 한 프레임에 통째로
 			if (content[i] == '<')
 			{
 				int close = content.IndexOf('>', i);
@@ -234,12 +320,6 @@ public class NPCDialogueController : MonoBehaviour
 
 		isTyping = false;
 		typingCo = null;
-
-		// NPC_003: 1) 선택 후 삽입한 추가 한 줄 출력이 끝났다면 → Stage3
-		if (npc == NpcId.NPC_003 && index > 3 && index == lines.Count - 1)
-		{
-			GoStage(3);
-		}
 	}
 
 	void ForceComplete()
@@ -257,8 +337,7 @@ public class NPCDialogueController : MonoBehaviour
 		if (isTransitioning) return;
 		isTransitioning = true;
 
-		// NPC_001/002/004 → 자동으로 1/2/4 저장 후 MainScene 로드
-		int next = GetDefaultNextStageByNpc();
+		int next = GetDefaultNextStageByNpc(); // 1/2/3/4 고정 매핑
 		if (next > 0)
 		{
 			PlayerPrefs.SetInt(KEY_NEXT_STAGE, next);
@@ -272,25 +351,41 @@ public class NPCDialogueController : MonoBehaviour
 		SceneManager.LoadScene(nextSceneOnFinish);
 	}
 
-	void GoStage(int stageIndex)
-	{
-		if (isTransitioning) return;
-		isTransitioning = true;
-
-		PlayerPrefs.SetInt(KEY_NEXT_STAGE, stageIndex);
-		PlayerPrefs.Save();
-
-		SceneManager.LoadScene(stageSceneName);
-	}
-
 	int GetDefaultNextStageByNpc()
 	{
 		switch (npc)
 		{
-			case NpcId.NPC_001: return 1;
-			case NpcId.NPC_002: return 2;
-			case NpcId.NPC_004: return 4;
-			default: return 0; // NPC_003은 여기 안 옴(선택 로직으로 GoStage 처리)
+			case NpcId.NPC_001: return 1; // 틸로슨
+			case NpcId.NPC_002: return 2; // 시안
+			case NpcId.NPC_003: return 3; // 텔레스크린
+			case NpcId.NPC_004: return 4; // 채링턴
+			default: return 0;
+		}
+	}
+
+	// === 좌우 반전(플레이어 대사 전용) ===
+	void SetFlipped(bool flipped)
+	{
+		// 부모 컨테이너는 좌우 반전
+		if (talkRowRoot)
+		{
+			var s = talkRowRoot.localScale;
+			s.x = flipped ? -1f : 1f;
+			talkRowRoot.localScale = s;
+		}
+
+		// 텍스트는 다시 한 번 반전해서 글자가 거꾸로 보이지 않게
+		if (nameLeft)
+		{
+			var s = nameLeft.rectTransform.localScale;
+			s.x = flipped ? -1f : 1f;
+			nameLeft.rectTransform.localScale = s;
+		}
+		if (dialogueText)
+		{
+			var s = dialogueText.rectTransform.localScale;
+			s.x = flipped ? -1f : 1f;
+			dialogueText.rectTransform.localScale = s;
 		}
 	}
 }
