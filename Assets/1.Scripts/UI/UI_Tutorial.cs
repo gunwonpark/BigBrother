@@ -36,7 +36,7 @@ public class DialogueGroup
 public class UI_Tutorial : MonoBehaviour
 {
     [SerializeField] private Image fadePanel;
-    [SerializeField] private DialogueGroup[] DialogueGroup; // 0 ¿ÞÂÊ »ó´Ü ±×·ì, 1 ¿À¸¥ÂÊ ÇÏ´Ü ±×·ì
+    [SerializeField] private DialogueGroup[] DialogueGroup; // 0 ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ ï¿½×·ï¿½, 1 ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ï´ï¿½ ï¿½×·ï¿½
     [SerializeField] private TutorialDialogues tutorialDialogue;
     [SerializeField] private Image slideIndicator;
 
@@ -140,7 +140,7 @@ public class UI_Tutorial : MonoBehaviour
             Debug.Log("Started typing: " + text);
             while (isTyping)
             {
-                // Å¸ÀÌÇÎ Áß Å¬¸¯ ½Ã Áï½Ã ÀüÃ¼ ÅØ½ºÆ® Ç¥½Ã
+                // Å¸ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ Å¬ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ ï¿½ï¿½Ã¼ ï¿½Ø½ï¿½Æ® Ç¥ï¿½ï¿½
                 if(Input.GetMouseButtonDown(0))
                 {
                     StopCoroutine(typingCoroutine);
@@ -150,7 +150,7 @@ public class UI_Tutorial : MonoBehaviour
                 yield return null;
             }
 
-            // Å¬¸¯½Ã ´ÙÀ½ ÅØ½ºÆ®·Î ÁøÇà
+            // Å¬ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½Ø½ï¿½Æ®ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
             yield return new WaitUntil(() => Input.GetMouseButtonDown(0));
             yield return null;
         }

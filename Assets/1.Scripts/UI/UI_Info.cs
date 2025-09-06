@@ -33,8 +33,8 @@ public class UI_Info : MonoBehaviour
 
     private void ShowHintObject()
     {
-        remainHintText.text = $"³²Àº ÈùÆ® °¹¼ö: {GameManager.Instance.RemainHintCount}";
-        answerCountText.text = $"¾ÏÈ£ °¹¼ö: {GameManager.Instance.AnswerCount}";
+        remainHintText.text = $"ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½Æ® ï¿½ï¿½ï¿½ï¿½: {GameManager.Instance.RemainHintCount}";
+        answerCountText.text = $"ï¿½ï¿½È£ ï¿½ï¿½ï¿½ï¿½: {GameManager.Instance.AnswerCount}";
         hintObject.SetActive(true);
     }
 
@@ -65,14 +65,14 @@ public class UI_Info : MonoBehaviour
         bool isBlinking = true;
         while (isBlinking)
         {
-            // »ö»óÀ» Á¡Á¡ º¯°æ
+            // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
             while (elapsedTime < blinkDuration)
             {
                 memoImage.color = Color.Lerp(originalColor, blinkColor, (elapsedTime / blinkDuration));
                 elapsedTime += Time.deltaTime;
                 yield return null;
             }
-            // »ö»óÀ» ¿ø·¡´ë·Î Á¡Á¡ º¯°æ
+            // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
             elapsedTime = 0f;
             while (elapsedTime < blinkDuration)
             {
@@ -82,7 +82,7 @@ public class UI_Info : MonoBehaviour
             }
             elapsedTime = 0f;
         }
-        // ÃÖÁ¾ÀûÀ¸·Î ¿ø·¡ »ö»óÀ¸·Î ¼³Á¤
+        // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
         memoImage.color = originalColor;
     }
 }

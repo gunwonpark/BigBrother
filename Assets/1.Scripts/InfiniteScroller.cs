@@ -5,7 +5,7 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
-// ¼öÆò ¹æÇâÀ¸·Î ½ºÅ©·ÑÀ» ÇÏ¸ç ¹®ÀåÀÇ ½ÃÀÛ°ú ³¡ÀÌ ÀÌ¾îÁö°Ô ÇÑ´Ù
+// ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½Å©ï¿½ï¿½ï¿½ï¿½ ï¿½Ï¸ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½Û°ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½Ì¾ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ñ´ï¿½
 public class InfiniteScroller : MonoBehaviour
 {
     public ScrollRect scrollRect;
@@ -13,7 +13,7 @@ public class InfiniteScroller : MonoBehaviour
     public RectTransform contentTransform;
     public HorizontalLayoutGroup layoutGroup;
 
-    [SerializeField] private RectTransform[] textList; // 3°³ÀÇ ÅØ½ºÆ® ¿ä¼Ò·Î ¼³Á¤ -> ÇöÀç ±¸Á¶»ó Ç×»ó Text´Â viewPort±âº» Å©±â¸¦ ³Ñ°íÀÖ´Ù
+    [SerializeField] private RectTransform[] textList; // 3ï¿½ï¿½ï¿½ï¿½ ï¿½Ø½ï¿½Æ® ï¿½ï¿½Ò·ï¿½ ï¿½ï¿½ï¿½ï¿½ -> ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½×»ï¿½ Textï¿½ï¿½ viewPortï¿½âº» Å©ï¿½â¸¦ ï¿½Ñ°ï¿½ï¿½Ö´ï¿½
 
     [field : SerializeField] public bool IsDragging { get; private set; }
 
@@ -24,7 +24,7 @@ public class InfiniteScroller : MonoBehaviour
 
     private void OnDestroy()
     {
-        // ¸Þ¸ð¸® ´©¼ö ¹æÁö
+        // ï¿½Þ¸ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
         scrollRect.onValueChanged.RemoveListener(OnScrollChanged);
         DataManager.Instance.OnSlidingUnlocked -= EnableScrolling;
     }
@@ -54,7 +54,7 @@ public class InfiniteScroller : MonoBehaviour
         }
         LayoutRebuilder.ForceRebuildLayoutImmediate(contentTransform);
 
-        // ¾ÆÀÌÅÛ ÇÏ³ªÀÇ ³Êºñ °è»ê
+        // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ï³ï¿½ï¿½ï¿½ ï¿½Êºï¿½ ï¿½ï¿½ï¿½
         itemWidth = textList[0].rect.width + layoutGroup.spacing;
         float scrollableWidth = contentTransform.rect.width - viewPortTransform.rect.width;
         float targetPosition = itemWidth;
@@ -90,14 +90,14 @@ public class InfiniteScroller : MonoBehaviour
     {
         isCoroutineRunning = true;
 
-        // °ü¼º ÀúÀå
+        // ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
         Vector2 savedVelocity = scrollRect.velocity;
         contentTransform.anchoredPosition += new Vector2(positionOffset, 0);
 
-        // UI°¡ À§Ä¡ º¯°æÀ» ¿ÏÀüÈ÷ ¹Ý¿µÇÒ ¶§ ´ë±â
+        // UIï¿½ï¿½ ï¿½ï¿½Ä¡ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ý¿ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½
         yield return new WaitForEndOfFrame();
 
-        // ÃÊ±âÈ­µÈ À§Ä¡¿¡¼­ °ü¼º À¯Áö
+        // ï¿½Ê±ï¿½È­ï¿½ï¿½ ï¿½ï¿½Ä¡ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
         scrollRect.velocity = savedVelocity;
 
         isCoroutineRunning = false;

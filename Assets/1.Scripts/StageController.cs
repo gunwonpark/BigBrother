@@ -4,15 +4,15 @@ using System.Text;
 using TMPro;
 using UnityEngine;
 
-// °¢ ±ÛÀÚÀÇ »óÅÂ¸¦ ÀúÀåÇÏ´Â ³»ºÎ Å¬·¡½º
+// ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½Â¸ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ï´ï¿½ ï¿½ï¿½ï¿½ï¿½ Å¬ï¿½ï¿½ï¿½ï¿½
 public class CharInfo
 {
     public char Character;
-    public bool IsMine;        // Á¤´ä ±ÛÀÚ ÀÎ°¡
-    public bool IsRemoved;     // Á¦°ÅµÇ¾ú´Â°¡
-    public bool IsHoveredHint; // ¸¶¿ì½º È£¹ö·Î ÀÎÇØ °­Á¶ »óÅÂÀÎ°¡
-    public int HintState;      // 0: ±âº», 1: Èò»ö, 2: È¸»ö
-    public bool CanClicked;    // Å¬¸¯ °¡´ÉÇÑ »óÅÂÀÎ°¡(Æ©Åä¸®¾ó¿ë)
+    public bool IsMine;        // ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½Î°ï¿½
+    public bool IsRemoved;     // ï¿½ï¿½ï¿½ÅµÇ¾ï¿½ï¿½Â°ï¿½
+    public bool IsHoveredHint; // ï¿½ï¿½ï¿½ì½º È£ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Î°ï¿½
+    public int HintState;      // 0: ï¿½âº», 1: ï¿½ï¿½ï¿½, 2: È¸ï¿½ï¿½
+    public bool CanClicked;    // Å¬ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Î°ï¿½(Æ©ï¿½ä¸®ï¿½ï¿½ï¿½)
     public bool CanRightClicked; 
     public bool CanLeftClicked;
     public CharInfo(char character)
@@ -30,37 +30,37 @@ public class CharInfo
 
 public class StageController : MonoBehaviour
 {
-    [SerializeField] private InfiniteScroller infiniteScroller; // ¹«ÇÑ ½ºÅ©·Ñ ÄÄÆ÷³ÍÆ®
-    [SerializeField] private TextMeshProUGUI[] sentenceText;    // ¹«ÇÑ ½ºÅ©·ÑÀ» À§ÇÑ ÅØ½ºÆ® ¹è¿­
-    [SerializeField] private Camera mainCamera;                 // PostProceesingÀ» Àû¿ëÇÒ °¡´É¼ºÀÌ ÀÖ´Ù
+    [SerializeField] private InfiniteScroller infiniteScroller; // ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½Å©ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ®
+    [SerializeField] private TextMeshProUGUI[] sentenceText;    // ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½Å©ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½Ø½ï¿½Æ® ï¿½è¿­
+    [SerializeField] private Camera mainCamera;                 // PostProceesingï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½É¼ï¿½ï¿½ï¿½ ï¿½Ö´ï¿½
 
-    private List<CharInfo> charInfos = new List<CharInfo>();              // °¢ ±ÛÀÚÀÇ »óÅÂ Á¤º¸ ÀúÀå ¹è¿­
-    [SerializeField] private int removableLetterCount;          // ³²Àº Áö·Ú °³¼ö
+    private List<CharInfo> charInfos = new List<CharInfo>();              // ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½è¿­
+    [SerializeField] private int removableLetterCount;          // ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
 
-    private const float DRAG_THRESHOLD = 10f;  // µå·¡±×·Î °£ÁÖÇÒ ÃÖ¼Ò ÇÈ¼¿ °Å¸®
-    private Vector2 mouseDownPosition;         // ¸¶¿ì½º¸¦ ´­·¶À» ¶§ÀÇ ÁÂÇ¥ ÀúÀå
-    private int potentialClickIndex = -1;      // Å¬¸¯ ÈÄº¸°¡ µÈ ±ÛÀÚÀÇ ÀÎµ¦½º
+    private const float DRAG_THRESHOLD = 10f;  // ï¿½å·¡ï¿½×·ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ö¼ï¿½ ï¿½È¼ï¿½ ï¿½Å¸ï¿½
+    private Vector2 mouseDownPosition;         // ï¿½ï¿½ï¿½ì½ºï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½Ç¥ ï¿½ï¿½ï¿½ï¿½
+    private int potentialClickIndex = -1;      // Å¬ï¿½ï¿½ ï¿½Äºï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Îµï¿½ï¿½ï¿½
 
-    private int previousHoverIndex = -1;       // ÀÌÀü ÇÁ·¹ÀÓ¿¡¼­ È£¹öÇß´ø ±ÛÀÚÀÇ ÀÎµ¦½º
-    private List<int> highlightedIndices = new List<int>(); // ÇöÀç ÇÎÅ©»öÀ¸·Î °­Á¶µÈ ÀÎµ¦½º ¸®½ºÆ®
+    private int previousHoverIndex = -1;       // ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ó¿ï¿½ï¿½ï¿½ È£ï¿½ï¿½ï¿½ß´ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Îµï¿½ï¿½ï¿½
+    private List<int> highlightedIndices = new List<int>(); // ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½Å©ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Îµï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½Æ®
 
-    // ½ºÅ×ÀÌÁö µ¥ÀÌÅÍ·Î ÃÊ±â ¼³Á¤
+    // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Í·ï¿½ ï¿½Ê±ï¿½ ï¿½ï¿½ï¿½ï¿½
     public void SetupStage(StageData data)
     {
         string fullSentence = data.FullSentence;
         string answerWord = data.AnswerWord;
 
-        // ¹®Àå ÀüÃ¼¸¦ CharInfo ¹è¿­·Î ÃÊ±âÈ­
+        // ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½Ã¼ï¿½ï¿½ CharInfo ï¿½è¿­ï¿½ï¿½ ï¿½Ê±ï¿½È­
         charInfos.Clear();
         charInfos.AddRange(fullSentence.Select(c => new CharInfo(c)));
 
-        // Æ©Åä¸®¾ó ´Ü°èÀÎ °æ¿ì ÀÓÀÇ·Î ¼³Á¤µÈ °ø°£À» »ç¿ëÇÑ´Ù
+        // Æ©ï¿½ä¸®ï¿½ï¿½ ï¿½Ü°ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½Ç·ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½Ñ´ï¿½
         if (DataManager.Instance.CurrentWorldLevel == 0)
         {
-            // ÀüÃ¼ Å¬¸¯ Àá±Ý
+            // ï¿½ï¿½Ã¼ Å¬ï¿½ï¿½ ï¿½ï¿½ï¿½
             charInfos.ForEach(c => { c.CanClicked = false; c.CanLeftClicked = false; c.CanRightClicked = false; });
 
-            // 5, 7, 13, 16 ,17 ¹øÂ° ±ÛÀÚ ¸¶ÀÎÀ¸·Î ¼³Á¤
+            // 5, 7, 13, 16 ,17 ï¿½ï¿½Â° ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
             charInfos[5].IsMine = true;
             charInfos[7].IsMine = true;
             charInfos[13].IsMine = true;
@@ -69,7 +69,7 @@ public class StageController : MonoBehaviour
         }
         else
         {
-            // fullSentence¿¡¼­ answerWordÀÇ ±ÛÀÚ À§Ä¡¸¦ ¹«ÀÛÀ§·Î ¸ÅÇÎÇÑ´Ù
+            // fullSentenceï¿½ï¿½ï¿½ï¿½ answerWordï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½Ä¡ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ñ´ï¿½
             for (int i = 0; i < answerWord.Length; i++)
             {
                 char key = answerWord[i];
@@ -85,18 +85,18 @@ public class StageController : MonoBehaviour
                     }
                 }
 
-                // ·£´ýÀ¸·Î ÇÑ°¡Áö ¼±ÅÃ
+                // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ñ°ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
                 int randomValue = Random.Range(0, positions.Count);
 
-                // ÇØ´ç À§Ä¡¸¦ Á¤´ä(¸¶ÀÎ) ±ÛÀÚ·Î Ç¥½Ã
+                // ï¿½Ø´ï¿½ ï¿½ï¿½Ä¡ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½(ï¿½ï¿½ï¿½ï¿½) ï¿½ï¿½ï¿½Ú·ï¿½ Ç¥ï¿½ï¿½
                 charInfos[positions[randomValue]].IsMine = true;
             }
         }
             
-        // Á¦°ÅÇØ¾ß ÇÒ ±ÛÀÚ °è»ê
+        // ï¿½ï¿½ï¿½ï¿½ï¿½Ø¾ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½
         removableLetterCount = charInfos.Count(item => item.IsMine == false && char.IsLetter(item.Character));
 
-        // ¹«ÇÑ ½ºÅ©·Ñ ¼³Á¤
+        // ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½Å©ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
         for (int i = 0; i < sentenceText.Length; i++)
         {
             sentenceText[i].text = fullSentence;
@@ -105,18 +105,18 @@ public class StageController : MonoBehaviour
         infiniteScroller.gameObject.SetActive(true);
     }
 
-    // ÀÔ·Â Ã³¸®
+    // ï¿½Ô·ï¿½ Ã³ï¿½ï¿½
     void Update()
     {
         if (!GameManager.Instance.IsGameActive) return;
         if (infiniteScroller.IsDragging) return;
 
-        // ¸¶¿ì½º È£¹ö Ã³¸®
+        // ï¿½ï¿½ï¿½ì½º È£ï¿½ï¿½ Ã³ï¿½ï¿½
         int currentHoverIndex = GetCharacterIndexAt(Input.mousePosition);
 
         if (currentHoverIndex != previousHoverIndex && currentHoverIndex != -1 && charInfos[currentHoverIndex].CanClicked)
         {
-            // ÀÌÀü¿¡ °­Á¶Çß´ø ±ÛÀÚµéÀ» ¸ðµÎ ¿ø·¡ »óÅÂ·Î µÇµ¹¸²
+            // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ß´ï¿½ ï¿½ï¿½ï¿½Úµï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½Â·ï¿½ ï¿½Çµï¿½ï¿½ï¿½
             foreach (int index in highlightedIndices)
             {
                 if (index >= 0 && index < charInfos.Count)
@@ -125,16 +125,16 @@ public class StageController : MonoBehaviour
 
             highlightedIndices.Clear();
 
-            // »õ·Î È£¹öÇÑ ±ÛÀÚ°¡ À¯È¿ÇÏ´Ù¸é (Á¦°ÅµÇÁö ¾ÊÀº ¾ËÆÄºª)
+            // ï¿½ï¿½ï¿½ï¿½ È£ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½Ú°ï¿½ ï¿½ï¿½È¿ï¿½Ï´Ù¸ï¿½ (ï¿½ï¿½ï¿½Åµï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½Äºï¿½)
             if (currentHoverIndex != -1 &&
                 char.IsLetter(charInfos[currentHoverIndex].Character) &&
                 !charInfos[currentHoverIndex].IsRemoved)
             {
-                // ÁÂ¿ì 2 '±ÛÀÚ' ¹üÀ§ÀÇ ÀÎµ¦½º¸¦ Ã£¾Æ ¸®½ºÆ®¿¡ Ãß°¡
+                // ï¿½Â¿ï¿½ 2 'ï¿½ï¿½ï¿½ï¿½' ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Îµï¿½ï¿½ï¿½ï¿½ï¿½ Ã£ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½Æ®ï¿½ï¿½ ï¿½ß°ï¿½
                 highlightedIndices.AddRange(GetLetterIndicesInRange(currentHoverIndex, -1, 2));
                 highlightedIndices.AddRange(GetLetterIndicesInRange(currentHoverIndex, 1, 2));
 
-                // »õ·Î °­Á¶ÇÒ ±ÛÀÚµéÀÇ »óÅÂ¸¦ º¯°æ
+                // ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½Úµï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½Â¸ï¿½ ï¿½ï¿½ï¿½ï¿½
                 foreach (int index in highlightedIndices)
                 {
                     charInfos[index].IsHoveredHint = true;
@@ -146,7 +146,7 @@ public class StageController : MonoBehaviour
 
         previousHoverIndex = currentHoverIndex;
 
-        // ¸¶¿ì½º Å¬¸¯ Ã³¸®
+        // ï¿½ï¿½ï¿½ì½º Å¬ï¿½ï¿½ Ã³ï¿½ï¿½
         if (Input.GetMouseButtonDown(0) || Input.GetMouseButtonDown(1))
         {
             mouseDownPosition = Input.mousePosition;
@@ -157,7 +157,7 @@ public class StageController : MonoBehaviour
         {
             if (potentialClickIndex != -1)
             {
-                // ´©¸¥ À§Ä¡¿Í ¶¾ À§Ä¡ »çÀÌÀÇ °Å¸®¸¦ °è»ê
+                // ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½Ä¡ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½Ä¡ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Å¸ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½
                 float mouseDragDistance = Vector2.Distance(mouseDownPosition, Input.mousePosition);
 
                 if (mouseDragDistance < DRAG_THRESHOLD)
@@ -207,18 +207,18 @@ public class StageController : MonoBehaviour
         return -1;
     }
 
-    // ÁÂÅ¬¸¯ ·ÎÁ÷
+    // ï¿½ï¿½Å¬ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
     private void OnLeftClick(int index)
     {
         CharInfo info = charInfos[index];
         if (info.IsRemoved || !char.IsLetter(info.Character) || info.CanClicked == false || info.CanLeftClicked == false) return;
-        // Áö·Ú¸¦ Å¬¸¯ÇÑ °æ¿ì
+        // ï¿½ï¿½ï¿½Ú¸ï¿½ Å¬ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½
         if (info.IsMine)
         {
-            // Áö·Ú´Â Á¦°ÅµÇÁö ¾Ê°í, ¶óÀÌÇÁ¸¸ °¨¼Ò
+            // ï¿½ï¿½ï¿½Ú´ï¿½ ï¿½ï¿½ï¿½Åµï¿½ï¿½ï¿½ ï¿½Ê°ï¿½, ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
             GameManager.Instance.OnMineClicked();
         }
-        // Áö·Ú°¡ ¾Æ´Ñ ±ÛÀÚ¸¦ Å¬¸¯ÇÑ °æ¿ì
+        // ï¿½ï¿½ï¿½Ú°ï¿½ ï¿½Æ´ï¿½ ï¿½ï¿½ï¿½Ú¸ï¿½ Å¬ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½
         else
         {
             DataManager.Instance.IsTextClicked = true;
@@ -227,7 +227,7 @@ public class StageController : MonoBehaviour
             
             UpdateDisplayText();
 
-            // Á¦°ÅÇØ¾ß ÇÒ ±ÛÀÚ¸¦ ¸ðµÎ Á¦°ÅÇßÀ¸¸é ½Â¸®
+            // ï¿½ï¿½ï¿½ï¿½ï¿½Ø¾ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½Ú¸ï¿½ ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Â¸ï¿½
             if (removableLetterCount <= 0)
             {
                 GameManager.Instance.StageClear();
@@ -235,7 +235,7 @@ public class StageController : MonoBehaviour
         }
     }
 
-    // ¿ìÅ¬¸¯ ÈùÆ® ·ÎÁ÷
+    // ï¿½ï¿½Å¬ï¿½ï¿½ ï¿½ï¿½Æ® ï¿½ï¿½ï¿½ï¿½
     private void OnRightClick(int index)
     {
         CharInfo info = charInfos[index];
@@ -265,13 +265,13 @@ public class StageController : MonoBehaviour
             finalMineRange = rightMineRange;
         }
 
-        // À¯È¿ÇÑ ¹üÀ§ ³»¿¡¼­ Áö·Ú¸¦ Ã£¾ÒÀ» °æ¿ì¿¡¸¸ »óÅÂ º¯°æ
+        // ï¿½ï¿½È¿ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½Ú¸ï¿½ Ã£ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ì¿¡ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
         if (finalMineRange != -1)
         {
             info.HintState = finalMineRange;
             UpdateDisplayText();
         }
-        // Áö·Ú°¡ ¾ø´Ù¸é ±× ¹üÀ§ÀÇ ±ÛÀÚµé Á¦°ÅÃ³¸®
+        // ï¿½ï¿½ï¿½Ú°ï¿½ ï¿½ï¿½ï¿½Ù¸ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½Úµï¿½ ï¿½ï¿½ï¿½ï¿½Ã³ï¿½ï¿½
         else
         {
             charInfos[index].IsRemoved = true;
@@ -291,7 +291,7 @@ public class StageController : MonoBehaviour
 
             UpdateDisplayText();
 
-            // Á¦°ÅÇØ¾ß ÇÒ ±ÛÀÚ¸¦ ¸ðµÎ Á¦°ÅÇßÀ¸¸é ½Â¸®
+            // ï¿½ï¿½ï¿½ï¿½ï¿½Ø¾ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½Ú¸ï¿½ ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Â¸ï¿½
             if (removableLetterCount <= 0)
             {
                 GameManager.Instance.StageClear();
@@ -303,25 +303,25 @@ public class StageController : MonoBehaviour
     private int FindMineInRange(int startIndex, int direction, int maxLetterChecks)
     {
         int sentenceLength = charInfos.Count;
-        int lettersChecked = 0; // °Ë»çÇÑ ¾ËÆÄºªÀÇ ¼ö
+        int lettersChecked = 0; // ï¿½Ë»ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½Äºï¿½ï¿½ï¿½ ï¿½ï¿½
 
         for (int i = 1; i < sentenceLength; i++)
         {
             int currentIndex = (startIndex + (i * direction) + sentenceLength) % sentenceLength;
             CharInfo currentInfo = charInfos[currentIndex];
 
-            // ÇöÀç À§Ä¡°¡ ¾ËÆÄºªÀÏ °æ¿ì¿¡¸¸ Ä«¿îÆ®
+            // ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½Ä¡ï¿½ï¿½ ï¿½ï¿½ï¿½Äºï¿½ï¿½ï¿½ ï¿½ï¿½ì¿¡ï¿½ï¿½ Ä«ï¿½ï¿½Æ®
             if (char.IsLetter(currentInfo.Character))
             {
                 lettersChecked++;
 
-                // ÇØ´ç ¾ËÆÄºªÀÌ Áö·Ú¶ó¸é, ¸î ¹øÂ° ¾ËÆÄºªÀÎÁö ¹ÝÈ¯
+                // ï¿½Ø´ï¿½ ï¿½ï¿½ï¿½Äºï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½Ú¶ï¿½ï¿½, ï¿½ï¿½ ï¿½ï¿½Â° ï¿½ï¿½ï¿½Äºï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½È¯
                 if (currentInfo.IsMine)
                 {
                     return lettersChecked;
                 }
 
-                // ÃÖ´ë °Ë»ç È½¼ö¸¦ ³Ñ¾úÀ¸¸é Å½»ö ÁßÁö
+                // ï¿½Ö´ï¿½ ï¿½Ë»ï¿½ È½ï¿½ï¿½ï¿½ï¿½ ï¿½Ñ¾ï¿½ï¿½ï¿½ï¿½ï¿½ Å½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
                 if (lettersChecked >= maxLetterChecks)
                 {
                     return -1;
@@ -329,14 +329,14 @@ public class StageController : MonoBehaviour
             }
         }
 
-        // ¹®Àå ÀüÃ¼¸¦ ´Ù µ¹¾Æµµ ¸ø Ã£¾ÒÀ¸¸é -1 ¹ÝÈ¯
+        // ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½Ã¼ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½Æµï¿½ ï¿½ï¿½ Ã£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ -1 ï¿½ï¿½È¯
         return -1;
     }
 
-    // È­¸é ¾÷µ¥ÀÌÆ®
+    // È­ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ®
     private void UpdateDisplayText()
     {
-        // ÀÌ ÇÔ¼ö´Â º¯°æÇÒ ÇÊ¿ä ¾øÀÌ ±×´ë·Î ÀÛµ¿ÇÕ´Ï´Ù.
+        // ï¿½ï¿½ ï¿½Ô¼ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ê¿ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½×´ï¿½ï¿½ ï¿½Ûµï¿½ï¿½Õ´Ï´ï¿½.
         StringBuilder sb = new StringBuilder();
         foreach (CharInfo info in charInfos)
         {
@@ -344,7 +344,7 @@ public class StageController : MonoBehaviour
             if (info.HintState == 1) finalTag = "<color=white>";
             else if (info.HintState == 2) finalTag = "<color=#8C8C8C>";
             if (info.IsRemoved) finalTag = "<color=black>";
-            else if (info.IsHoveredHint) finalTag = "<color=#FF6969>"; // ÇÎÅ©»ö °­Á¶
+            else if (info.IsHoveredHint) finalTag = "<color=#FF6969>"; // ï¿½ï¿½Å©ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
 
             sb.Append(finalTag);
             sb.Append(info.Character);
@@ -358,7 +358,7 @@ public class StageController : MonoBehaviour
         }
     }
 
-    // Æ©Åä¸®¾ó ¿ë
+    // Æ©ï¿½ä¸®ï¿½ï¿½ ï¿½ï¿½
     public void EnableRightClick()
     {
         charInfos[6].CanClicked = true;

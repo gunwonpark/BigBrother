@@ -24,7 +24,7 @@ public class UI_Main : MonoBehaviour
         string koreanSentence = data.KoreanSentence;
 
         answerText.text = "";
-        // Á¤´ä ´Ü¾î ¼³Á¤
+        // ï¿½ï¿½ï¿½ï¿½ ï¿½Ü¾ï¿½ ï¿½ï¿½ï¿½ï¿½
         foreach (var answerChar in answerWord)
         {
             answerText.text += answerChar + "  ";
@@ -106,14 +106,14 @@ public class UI_Main : MonoBehaviour
 
         string suffix = index switch
         {
-            1 => "Ã¹ ¹øÂ° ",
-            2 => "µÎ ¹øÂ° ",
-            3 => "¼¼ ¹øÂ° ",
-            4 => "¸¶Áö¸· ",
-            _ => index + "¹øÂ°"
+            1 => "Ã¹ ï¿½ï¿½Â° ",
+            2 => "ï¿½ï¿½ ï¿½ï¿½Â° ",
+            3 => "ï¿½ï¿½ ï¿½ï¿½Â° ",
+            4 => "ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ",
+            _ => index + "ï¿½ï¿½Â°"
         };
 
-        aquireText.text = $"{suffix} ¾ÏÈ£¸¦ È¹µæÇß½À´Ï´Ù.";
+        aquireText.text = $"{suffix} ï¿½ï¿½È£ï¿½ï¿½ È¹ï¿½ï¿½ï¿½ß½ï¿½ï¿½Ï´ï¿½.";
     }
 
     public void HideAquireText()
@@ -134,7 +134,7 @@ public class UI_Main : MonoBehaviour
         gameTextGroup.alpha = targetAlpha;
     }
 
-    // Æ©Åä¸®¾ó ¿ë
+    // Æ©ï¿½ä¸®ï¿½ï¿½ ï¿½ï¿½
     public void BlinkMemo()
     {
         infoUI.BlinkMemo();
