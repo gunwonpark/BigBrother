@@ -1,4 +1,6 @@
+using NUnit.Framework.Constraints;
 using System.Collections;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
@@ -18,13 +20,42 @@ public class InfiniteScroller : MonoBehaviour
     private bool isCoroutineRunning = false;
     private float itemWidth;
 
+    private float startPos;
+
+    private void OnDestroy()
+    {
+        // 메모리 누수 방지
+        scrollRect.onValueChanged.RemoveListener(OnScrollChanged);
+        DataManager.Instance.OnSlidingUnlocked -= EnableScrolling;
+    }
+
+    private void OnScrollChanged(Vector2 normalizedPos)
+    {
+        float pos = normalizedPos.x;
+        if (pos < startPos - 0.01f)
+        {
+            DataManager.Instance.DoLeftSliding = true;
+        }
+        else if (pos > startPos + 0.01f)
+        {
+            DataManager.Instance.DoRightSliding = true;
+        }
+    }
+
     public IEnumerator Start()
     {
+
         yield return new WaitForEndOfFrame();
+
+        if(DataManager.Instance.IsSlidingLocked)
+        {
+            DisableScrolling();
+            DataManager.Instance.OnSlidingUnlocked += EnableScrolling;
+        }
+        LayoutRebuilder.ForceRebuildLayoutImmediate(contentTransform);
 
         // 아이템 하나의 너비 계산
         itemWidth = textList[0].rect.width + layoutGroup.spacing;
-
         float scrollableWidth = contentTransform.rect.width - viewPortTransform.rect.width;
         float targetPosition = itemWidth;
         float targetNormalizedPosition = targetPosition / scrollableWidth;
@@ -33,6 +64,9 @@ public class InfiniteScroller : MonoBehaviour
         {
             scrollRect.horizontalNormalizedPosition = targetNormalizedPosition;
         }
+
+        startPos = scrollRect.horizontalNormalizedPosition;
+        scrollRect.onValueChanged.AddListener(OnScrollChanged);
     }
 
     void Update()
@@ -42,13 +76,11 @@ public class InfiniteScroller : MonoBehaviour
 
         float contentXPos = contentTransform.anchoredPosition.x;
 
-        // 오른쪽 경계를 넘었을 때 (왼쪽으로 이동해야 함)
         if (contentXPos > 0)
         {
             StartCoroutine(RepositionContent(-itemWidth));
         }
-        // 왼쪽 경계를 넘었을 때 (오른쪽으로 이동해야 함)
-        else if (contentXPos < -itemWidth)
+        else if (contentXPos < -itemWidth * 2)
         {
             StartCoroutine(RepositionContent(itemWidth));
         }
@@ -69,5 +101,15 @@ public class InfiniteScroller : MonoBehaviour
         scrollRect.velocity = savedVelocity;
 
         isCoroutineRunning = false;
+    }
+
+    public void DisableScrolling()
+    {
+        scrollRect.horizontal = false;
+    }
+
+    public void EnableScrolling()
+    {
+        scrollRect.horizontal = true;
     }
 }

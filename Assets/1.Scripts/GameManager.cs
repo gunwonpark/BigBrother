@@ -36,16 +36,30 @@ public class GameManager : MonoBehaviour
 
     [Header("UI Refs")]
     [SerializeField] private UI_Main mainUI;
+    [SerializeField] private UI_Tutorial tutorialUI;
 
     [field : SerializeField] public bool IsGameActive { get; private set; }
 
     private Coroutine eyeAnimationCoroutine;
 
     private int lives;
+    private int remainingHints;
     private StageData curStage;
 
     private Queue<IEnumerator> animationQueue = new Queue<IEnumerator>();
     private bool isProcessingQueue = false;
+
+    public int RemainingLives => lives;
+    public int AnswerCount => curStage != null ? curStage.AnswerCount : 0;
+
+    public int RemainHintCount
+    {
+        get => remainingHints;
+        set
+        {
+            remainingHints = value;
+        }
+    }
 
     void Start()
     {
@@ -80,9 +94,19 @@ public class GameManager : MonoBehaviour
 
     public void LoadStage(int stageIndex)
     {
+        if(DataManager.Instance.CurrentWorldLevel != 0)
+        {
+            DataManager.Instance.IsSlidingLocked = false;
+        }
+        else
+        {
+            tutorialUI.gameObject.SetActive(true);
+        }
+
         curStage = stages.stageDatas[CurrentStageIndex];
         IsGameActive = true;
         lives = curStage.AnswerCount;
+        remainingHints = curStage.HintCount;
         mainUI.ResetUI();
         mainUI.SetText(curStage);
         stageController.SetupStage(curStage);
@@ -282,5 +306,56 @@ public class GameManager : MonoBehaviour
         fullEyeController.gameObject.SetActive(true);
         ResetEyes();
         LoadStage(CurrentStageIndex);
+    }
+
+    [SerializeField] private GameObject[] rightClicks;
+    [SerializeField] private GameObject[] leftClicks;
+
+    // 튜토리얼
+    public void ShowRightClick()
+    {
+        for (int i = 0; i < rightClicks.Length; i++)
+        {
+            rightClicks[i].SetActive(true);
+        }
+
+        stageController.EnableRightClick();
+    }
+
+    public void ShowLeftClick()
+    {
+        for (int i = 0; i < leftClicks.Length; i++)
+        {
+            leftClicks[i].SetActive(true);
+        }
+        stageController.EnableLeftClick();
+    }
+
+    public void HideRightClick()
+    {
+        for (int i = 0; i < rightClicks.Length; i++)
+        {
+            rightClicks[i].SetActive(false);
+        }
+        stageController.DisableRightClick();
+    }
+
+    public void HideLeftClick()
+    {
+        for (int i = 0; i < leftClicks.Length; i++)
+        {
+            leftClicks[i].SetActive(false);
+        }
+        stageController.DisableLeftClick();
+    }
+
+    public void EnableAllClick()
+    {
+        stageController.EnableAllClick();
+    }
+
+    public void BlinkMemo()
+    {
+        mainUI.BlinkMemo();
     }
 }

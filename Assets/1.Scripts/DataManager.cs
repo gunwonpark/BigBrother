@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 
 public class DataManager : MonoBehaviour
@@ -17,5 +18,29 @@ public class DataManager : MonoBehaviour
         }
     }
 
-    public int CurrentWorldLevel = 1;    
+    public int CurrentWorldLevel = 0;
+
+    // 튜토리얼 진행 여부
+
+    private bool isSlidingLocked = true;
+    public bool IsSlidingLocked
+    {
+        get => isSlidingLocked;
+        set
+        {
+            isSlidingLocked = value;
+            if(!isSlidingLocked)
+            {
+                OnSlidingUnlocked?.Invoke();
+            }
+        }
+    }
+
+    public event Action OnSlidingUnlocked;
+
+    public bool IsTextClicked = false;
+    public bool IsMemoButtonClicked = false;
+    public bool DoSliding => DoLeftSliding && DoRightSliding;
+    public bool DoLeftSliding = false;
+    public bool DoRightSliding = false;
 }

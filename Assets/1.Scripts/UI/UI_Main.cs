@@ -11,6 +11,7 @@ public class UI_Main : MonoBehaviour
     [SerializeField] private TextMeshProUGUI koreanText;
     [SerializeField] private GameObject gameOverUI;
     [SerializeField] private GameObject gameClearUI;
+    [SerializeField] private UI_Info infoUI;
 
     private void Start()
     {
@@ -35,6 +36,7 @@ public class UI_Main : MonoBehaviour
     public void ResetUI()
     {
         gameTextGroup.alpha = 1f;
+        ShowInfoUI();
         HideAquireText();
         HideAnswerText();
         EnableGameTextClick();
@@ -46,12 +48,26 @@ public class UI_Main : MonoBehaviour
     {
         gameTextGroup.interactable = false;
         gameTextGroup.blocksRaycasts = false;
+
+        HideInfoUI();
     }
 
     public void EnableGameTextClick()
     {
         gameTextGroup.interactable = true;
         gameTextGroup.blocksRaycasts = true;
+
+        ShowInfoUI();
+    }
+
+    public void ShowInfoUI()
+    {
+        infoUI.gameObject.SetActive(true);
+    }
+
+    public void HideInfoUI()
+    {
+        infoUI.gameObject.SetActive(false);
     }
 
     public void ShowAnswerText()
@@ -116,5 +132,11 @@ public class UI_Main : MonoBehaviour
             yield return null;
         }
         gameTextGroup.alpha = targetAlpha;
+    }
+
+    // Æ©Åä¸®¾ó ¿ë
+    public void BlinkMemo()
+    {
+        infoUI.BlinkMemo();
     }
 }
