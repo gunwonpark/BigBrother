@@ -101,6 +101,11 @@ public class NPCDialogueController : MonoBehaviour
 		ShowCurrentLine();
 	}
 
+	private void Start()
+	{
+		SoundManager.Instance.Play("story_bgm", Sound.Bgm, volume: 1f);
+	}
+
 	void OnDestroy()
 	{
 		if (backgroundClick) backgroundClick.onClick.RemoveListener(OnClickBackground);
