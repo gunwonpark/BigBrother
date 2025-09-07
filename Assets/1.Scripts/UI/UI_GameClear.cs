@@ -35,7 +35,7 @@ public class UI_GameClear : MonoBehaviour
 
     private void Start()
     {
-        nextButton.onClick.AddListener(NextScene);
+        //nextButton.onClick.AddListener(NextScene);
     }
 
     private void NextScene()

@@ -317,6 +317,7 @@ public class GameManager : MonoBehaviour
     private void GameOver()
     {
         IsGameActive = false;
+        tutorialUI.gameObject.SetActive(false);
         mainUI.DisableGameTextClick();
     }
 

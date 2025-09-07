@@ -651,6 +651,8 @@ MonoBehaviour:
     isActivedOnce: 0
   tutorialDialogue: {fileID: 11400000, guid: 4e7d9552a313ef44995a18cd44198e9a, type: 2}
   slideIndicator: {fileID: 1146641351}
+  RightClickObject: {fileID: 1369851753}
+  LeftClickObject: {fileID: 240823593}
 --- !u!1 &221717831
 GameObject:
   m_ObjectHideFlags: 0
@@ -3437,7 +3439,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: S T A G E C L E A R
+  m_text: S T A G E   C L E A R
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: de26865c697c87142a28a5e2c20c07a3, type: 2}
   m_sharedMaterial: {fileID: 5044387727092040085, guid: de26865c697c87142a28a5e2c20c07a3, type: 2}
