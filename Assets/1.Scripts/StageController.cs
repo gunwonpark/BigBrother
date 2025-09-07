@@ -30,37 +30,35 @@ public class CharInfo
 
 public class StageController : MonoBehaviour
 {
-    [SerializeField] private InfiniteScroller infiniteScroller; // ���� ��ũ�� ������Ʈ
-    [SerializeField] private TextMeshProUGUI[] sentenceText;    // ���� ��ũ���� ���� �ؽ�Ʈ �迭
-    [SerializeField] private Camera mainCamera;                 // PostProceesing�� ������ ���ɼ��� �ִ�
+    [SerializeField] private InfiniteScroller infiniteScroller; 
+    [SerializeField] private TextMeshProUGUI[] sentenceText;    
+    [SerializeField] private Camera mainCamera;                 
 
-    private List<CharInfo> charInfos = new List<CharInfo>();              // �� ������ ���� ���� ���� �迭
-    [SerializeField] private int removableLetterCount;          // ���� ���� ����
+    private List<CharInfo> charInfos = new List<CharInfo>();              
+    [SerializeField] private int removableLetterCount;          
 
-    private const float DRAG_THRESHOLD = 10f;  // �巡�׷� ������ �ּ� �ȼ� �Ÿ�
-    private Vector2 mouseDownPosition;         // ���콺�� ������ ���� ��ǥ ����
-    private int potentialClickIndex = -1;      // Ŭ�� �ĺ��� �� ������ �ε���
+    private const float DRAG_THRESHOLD = 10f; 
+    private Vector2 mouseDownPosition;         
+    private int potentialClickIndex = -1;     
 
-    private int previousHoverIndex = -1;       // ���� �����ӿ��� ȣ���ߴ� ������ �ε���
-    private List<int> highlightedIndices = new List<int>(); // ���� ��ũ������ ������ �ε��� ����Ʈ
+    private int previousHoverIndex = -1;     
+    private List<int> highlightedIndices = new List<int>(); 
 
-    // �������� �����ͷ� �ʱ� ����
     public void SetupStage(StageData data)
     {
         string fullSentence = data.FullSentence;
         string answerWord = data.AnswerWord;
 
-        // ���� ��ü�� CharInfo �迭�� �ʱ�ȭ
         charInfos.Clear();
         charInfos.AddRange(fullSentence.Select(c => new CharInfo(c)));
 
-        // Ʃ�丮�� �ܰ��� ��� ���Ƿ� ������ ������ ����Ѵ�
+        
         if (DataManager.Instance.CurrentWorldLevel == 0)
         {
-            // ��ü Ŭ�� ���
+            
             charInfos.ForEach(c => { c.CanClicked = false; c.CanLeftClicked = false; c.CanRightClicked = false; });
 
-            // 5, 7, 13, 16 ,17 ��° ���� �������� ����
+            
             charInfos[5].IsMine = true;
             charInfos[7].IsMine = true;
             charInfos[13].IsMine = true;
@@ -69,7 +67,7 @@ public class StageController : MonoBehaviour
         }
         else
         {
-            // fullSentence���� answerWord�� ���� ��ġ�� �������� �����Ѵ�
+            
             for (int i = 0; i < answerWord.Length; i++)
             {
                 char key = answerWord[i];
@@ -85,18 +83,17 @@ public class StageController : MonoBehaviour
                     }
                 }
 
-                // �������� �Ѱ��� ����
                 int randomValue = Random.Range(0, positions.Count);
 
-                // �ش� ��ġ�� ����(����) ���ڷ� ǥ��
+               
                 charInfos[positions[randomValue]].IsMine = true;
             }
         }
             
-        // �����ؾ� �� ���� ���
+      
         removableLetterCount = charInfos.Count(item => item.IsMine == false && char.IsLetter(item.Character));
 
-        // ���� ��ũ�� ����
+        
         for (int i = 0; i < sentenceText.Length; i++)
         {
             sentenceText[i].text = fullSentence;
@@ -105,18 +102,18 @@ public class StageController : MonoBehaviour
         infiniteScroller.gameObject.SetActive(true);
     }
 
-    // �Է� ó��
+    
     void Update()
     {
         if (!GameManager.Instance.IsGameActive) return;
         if (infiniteScroller.IsDragging) return;
 
-        // ���콺 ȣ�� ó��
+       
         int currentHoverIndex = GetCharacterIndexAt(Input.mousePosition);
 
         if (currentHoverIndex != previousHoverIndex && currentHoverIndex != -1 && charInfos[currentHoverIndex].CanClicked)
         {
-            // ������ �����ߴ� ���ڵ��� ��� ���� ���·� �ǵ���
+           
             foreach (int index in highlightedIndices)
             {
                 if (index >= 0 && index < charInfos.Count)
@@ -125,16 +122,16 @@ public class StageController : MonoBehaviour
 
             highlightedIndices.Clear();
 
-            // ���� ȣ���� ���ڰ� ��ȿ�ϴٸ� (���ŵ��� ���� ���ĺ�)
+            
             if (currentHoverIndex != -1 &&
                 char.IsLetter(charInfos[currentHoverIndex].Character) &&
                 !charInfos[currentHoverIndex].IsRemoved)
             {
-                // �¿� 2 '����' ������ �ε����� ã�� ����Ʈ�� �߰�
+            
                 highlightedIndices.AddRange(GetLetterIndicesInRange(currentHoverIndex, -1, 2));
                 highlightedIndices.AddRange(GetLetterIndicesInRange(currentHoverIndex, 1, 2));
 
-                // ���� ������ ���ڵ��� ���¸� ����
+            
                 foreach (int index in highlightedIndices)
                 {
                     charInfos[index].IsHoveredHint = true;
@@ -146,7 +143,7 @@ public class StageController : MonoBehaviour
 
         previousHoverIndex = currentHoverIndex;
 
-        // ���콺 Ŭ�� ó��
+       
         if (Input.GetMouseButtonDown(0) || Input.GetMouseButtonDown(1))
         {
             mouseDownPosition = Input.mousePosition;
@@ -157,7 +154,7 @@ public class StageController : MonoBehaviour
         {
             if (potentialClickIndex != -1)
             {
-                // ���� ��ġ�� �� ��ġ ������ �Ÿ��� ���
+            
                 float mouseDragDistance = Vector2.Distance(mouseDownPosition, Input.mousePosition);
 
                 if (mouseDragDistance < DRAG_THRESHOLD)
@@ -265,13 +262,11 @@ public class StageController : MonoBehaviour
             finalMineRange = rightMineRange;
         }
 
-        // ��ȿ�� ���� ������ ���ڸ� ã���� ��쿡�� ���� ����
         if (finalMineRange != -1)
         {
             info.HintState = finalMineRange;
             UpdateDisplayText();
         }
-        // ���ڰ� ���ٸ� �� ������ ���ڵ� ����ó��
         else
         {
             charInfos[index].IsRemoved = true;
@@ -291,7 +286,6 @@ public class StageController : MonoBehaviour
 
             UpdateDisplayText();
 
-            // �����ؾ� �� ���ڸ� ��� ���������� �¸�
             if (removableLetterCount <= 0)
             {
                 GameManager.Instance.StageClear();
@@ -303,25 +297,22 @@ public class StageController : MonoBehaviour
     private int FindMineInRange(int startIndex, int direction, int maxLetterChecks)
     {
         int sentenceLength = charInfos.Count;
-        int lettersChecked = 0; // �˻��� ���ĺ��� ��
+        int lettersChecked = 0; 
 
         for (int i = 1; i < sentenceLength; i++)
         {
             int currentIndex = (startIndex + (i * direction) + sentenceLength) % sentenceLength;
             CharInfo currentInfo = charInfos[currentIndex];
 
-            // ���� ��ġ�� ���ĺ��� ��쿡�� ī��Ʈ
             if (char.IsLetter(currentInfo.Character))
             {
                 lettersChecked++;
 
-                // �ش� ���ĺ��� ���ڶ��, �� ��° ���ĺ����� ��ȯ
                 if (currentInfo.IsMine)
                 {
                     return lettersChecked;
                 }
 
-                // �ִ� �˻� Ƚ���� �Ѿ����� Ž�� ����
                 if (lettersChecked >= maxLetterChecks)
                 {
                     return -1;
@@ -329,14 +320,11 @@ public class StageController : MonoBehaviour
             }
         }
 
-        // ���� ��ü�� �� ���Ƶ� �� ã������ -1 ��ȯ
         return -1;
     }
 
-    // ȭ�� ������Ʈ
     private void UpdateDisplayText()
     {
-        // �� �Լ��� ������ �ʿ� ���� �״�� �۵��մϴ�.
         StringBuilder sb = new StringBuilder();
         foreach (CharInfo info in charInfos)
         {
@@ -344,7 +332,7 @@ public class StageController : MonoBehaviour
             if (info.HintState == 1) finalTag = "<color=white>";
             else if (info.HintState == 2) finalTag = "<color=#8C8C8C>";
             if (info.IsRemoved) finalTag = "<color=black>";
-            else if (info.IsHoveredHint) finalTag = "<color=#FF6969>"; // ��ũ�� ����
+            else if (info.IsHoveredHint) finalTag = "<color=#FF6969>"; 
 
             sb.Append(finalTag);
             sb.Append(info.Character);
@@ -358,7 +346,6 @@ public class StageController : MonoBehaviour
         }
     }
 
-    // Ʃ�丮�� ��
     public void EnableRightClick()
     {
         charInfos[6].CanClicked = true;

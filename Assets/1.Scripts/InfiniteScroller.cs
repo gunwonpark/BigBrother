@@ -13,7 +13,7 @@ public class InfiniteScroller : MonoBehaviour
     public RectTransform contentTransform;
     public HorizontalLayoutGroup layoutGroup;
 
-    [SerializeField] private RectTransform[] textList; // 3���� �ؽ�Ʈ ��ҷ� ���� -> ���� ������ �׻� Text�� viewPort�⺻ ũ�⸦ �Ѱ��ִ�
+    [SerializeField] private RectTransform[] textList; 
 
     [field : SerializeField] public bool IsDragging { get; private set; }
 
@@ -24,7 +24,7 @@ public class InfiniteScroller : MonoBehaviour
 
     private void OnDestroy()
     {
-        // �޸� ���� ����
+      
         scrollRect.onValueChanged.RemoveListener(OnScrollChanged);
         DataManager.Instance.OnSlidingUnlocked -= EnableScrolling;
     }
@@ -90,14 +90,14 @@ public class InfiniteScroller : MonoBehaviour
     {
         isCoroutineRunning = true;
 
-        // ���� ����
+     
         Vector2 savedVelocity = scrollRect.velocity;
         contentTransform.anchoredPosition += new Vector2(positionOffset, 0);
 
-        // UI�� ��ġ ������ ������ �ݿ��� �� ���
+       
         yield return new WaitForEndOfFrame();
 
-        // �ʱ�ȭ�� ��ġ���� ���� ����
+        
         scrollRect.velocity = savedVelocity;
 
         isCoroutineRunning = false;
