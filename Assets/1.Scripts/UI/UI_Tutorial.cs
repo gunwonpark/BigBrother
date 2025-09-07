@@ -136,7 +136,6 @@ public class UI_Tutorial : MonoBehaviour
             }
 
             typingCoroutine = StartCoroutine(TypeText(dialogueText, text, 0.05f));
-            Debug.Log("Started typing: " + text);
             while (isTyping)
             {
                 if(Input.GetMouseButtonDown(0))
@@ -159,6 +158,17 @@ public class UI_Tutorial : MonoBehaviour
         textComponent.text = "";
         foreach(char c in fullText)
         {
+            if(c == '\\')
+            {
+                textComponent.text += '\n';
+                continue;
+            }
+
+            if(c == 'n')
+            {
+                continue;
+            }
+            
             textComponent.text += c;
             yield return new WaitForSeconds(typingSpeed);
         }

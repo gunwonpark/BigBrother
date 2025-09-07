@@ -11,6 +11,7 @@ public class UI_Main : MonoBehaviour
     [SerializeField] private TextMeshProUGUI koreanText;
     [SerializeField] private GameObject gameOverUI;
     [SerializeField] private GameObject gameClearUI;
+    [SerializeField] private GameObject EndingUI;
     [SerializeField] private UI_Info infoUI;
 
     private void Start()
@@ -104,16 +105,17 @@ public class UI_Main : MonoBehaviour
     {
         aquireText.gameObject.SetActive(true);
 
-        string suffix = index switch
+        string text = index switch
         {
-            1 => "첫 번째",
-            2 => "두 번째",
-            3 => "세 번째",
-            4 => "네 번째",
+            1 => "튜토리얼 스테이지를 클리어했습니다.\r\n실전 스테이지로 진입합니다.",
+            2 => "첫 번째 암호를 획득하였습니다",
+            3 => "두 번째 암호를 획득하였습니다",
+            4 => "세 번째 암호를 획득하였습니다",
+            5 => "마지막 암호를 획득하였습니다",
             _ => index + "번째"
         };
 
-        aquireText.text = $"{suffix} 암호를 획득하였습니다.";
+        aquireText.text = text;
     }
 
     public void HideAquireText()
@@ -134,9 +136,13 @@ public class UI_Main : MonoBehaviour
         gameTextGroup.alpha = targetAlpha;
     }
 
-    // Ʃ�丮�� ��
     public void BlinkMemo()
     {
         infoUI.BlinkMemo();
+    }
+
+    public void DoEndingUI()
+    {
+        EndingUI.SetActive(true);
     }
 }

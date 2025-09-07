@@ -1,10 +1,10 @@
 fileFormatVersion: 2
-guid: 90d10795dc32e834584c918cf0fc3277
+guid: 5405816dfb99f8f44b795ff85c19912f
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: -6731059825765882095
-    second: GameExit_0
+      213: 6665888962227291377
+    second: MemoUI_0
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -37,7 +37,7 @@ TextureImporter:
   maxTextureSize: 2048
   textureSettings:
     serializedVersion: 2
-    filterMode: 1
+    filterMode: 0
     aniso: 1
     mipBias: 0
     wrapU: 1
@@ -126,13 +126,13 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: GameExit_0
+      name: MemoUI_0
       rect:
         serializedVersion: 2
         x: 0
         y: 0
-        width: 1231
-        height: 318
+        width: 238
+        height: 274
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -141,8 +141,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 117625b40c87692a0800000000000000
-      internalID: -6731059825765882095
+      spriteID: 1f441c991bef18c50800000000000000
+      internalID: 6665888962227291377
       vertices: []
       indices: 
       edges: []
@@ -161,7 +161,7 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      GameExit_0: -6731059825765882095
+      MemoUI_0: 6665888962227291377
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

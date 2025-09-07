@@ -18,7 +18,7 @@ public class UI_GameClear : MonoBehaviour
     {
         nextButton.interactable = false;
         clearText.alpha = 0;
-        float duration = 3.0f; // ÆäÀÌµå ÀÎ Áö¼Ó ½Ã°£
+        float duration = 3.0f; // í˜ì´ë“œ ì¸ ì§€ì† ì‹œê°„
         float elapsed = 0f;
         while (elapsed < duration)
         {
@@ -26,7 +26,7 @@ public class UI_GameClear : MonoBehaviour
             clearText.alpha = Mathf.Clamp01(elapsed / duration);
             yield return null;
         }
-        clearText.alpha = 1; // È®½ÇÈ÷ ¿ÏÀüÈ÷ º¸ÀÌµµ·Ï ¼³Á¤
+        clearText.alpha = 1; // í™•ì‹¤íˆ ì™„ì „íˆ ë³´ì´ë„ë¡ ì„¤ì •
         nextButton.interactable = true;
     }
 
@@ -37,6 +37,18 @@ public class UI_GameClear : MonoBehaviour
 
     private void NextScene()
     {
-        SceneManager.LoadScene("NPCScene");
+        if(DataManager.Instance.CurrentWorldLevel == 1)
+        {
+            SceneManager.LoadScene("MainScene");
+        }
+        else if(DataManager.Instance.CurrentWorldLevel == 5)
+        {
+            SceneManager.LoadScene("EndingScene");
+        }
+        else
+        {
+            SceneManager.LoadScene("NPCScene");
+        }
+
     }
 }
