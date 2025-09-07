@@ -1,4 +1,4 @@
-﻿using System.Collections;
+using System.Collections;
 using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -27,6 +27,8 @@ public class UI_TitleScene : MonoBehaviour
 
 	[Header("Next Scene")]
 	[SerializeField] private string nextSceneName = "MainScene";
+
+    [SerializeField] private UI_IntroScene introUI;
 
 	private bool sequenceRunning;
 
@@ -106,7 +108,9 @@ public class UI_TitleScene : MonoBehaviour
 
 		yield return new WaitForSeconds(3f);
 
-		SceneManager.LoadScene(nextSceneName);
+		gameObject.SetActive(false);
+
+        introUI.gameObject.SetActive(true);
 	}
 
 	private IEnumerator WaitForOpenOnce()
