@@ -18,7 +18,7 @@ public class DataManager : MonoBehaviour
         }
     }
 
-    public int CurrentWorldLevel = 1;
+    public int CurrentWorldLevel = 0;
 
 
     private bool isSlidingLocked = true;
