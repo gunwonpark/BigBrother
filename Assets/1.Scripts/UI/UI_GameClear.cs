@@ -1,6 +1,7 @@
 using System.Collections;
 using TMPro;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 public class UI_GameClear : MonoBehaviour
@@ -36,7 +37,6 @@ public class UI_GameClear : MonoBehaviour
 
     private void NextScene()
     {
-        GameManager.Instance.LoadStage(DataManager.Instance.CurrentWorldLevel);
-        this.gameObject.SetActive(false);
+        SceneManager.LoadScene("NPCScene");
     }
 }

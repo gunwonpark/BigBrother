@@ -263,6 +263,8 @@ public class GameManager : MonoBehaviour
     private IEnumerator EndingSequence()
     {
         yield return null;
+
+
     }
 
     private IEnumerator GameFailSequence()
