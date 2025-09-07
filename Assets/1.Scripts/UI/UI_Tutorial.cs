@@ -32,11 +32,10 @@ public class DialogueGroup
     }
 }
 
-
 public class UI_Tutorial : MonoBehaviour
 {
     [SerializeField] private Image fadePanel;
-    [SerializeField] private DialogueGroup[] DialogueGroup; // 0 ���� ��� �׷�, 1 ������ �ϴ� �׷�
+    [SerializeField] private DialogueGroup[] DialogueGroup; 
     [SerializeField] private TutorialDialogues tutorialDialogue;
     [SerializeField] private Image slideIndicator;
 
@@ -140,7 +139,6 @@ public class UI_Tutorial : MonoBehaviour
             Debug.Log("Started typing: " + text);
             while (isTyping)
             {
-                // Ÿ���� �� Ŭ�� �� ��� ��ü �ؽ�Ʈ ǥ��
                 if(Input.GetMouseButtonDown(0))
                 {
                     StopCoroutine(typingCoroutine);
@@ -150,7 +148,6 @@ public class UI_Tutorial : MonoBehaviour
                 yield return null;
             }
 
-            // Ŭ���� ���� �ؽ�Ʈ�� ����
             yield return new WaitUntil(() => Input.GetMouseButtonDown(0));
             yield return null;
         }

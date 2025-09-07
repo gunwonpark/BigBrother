@@ -6,9 +6,9 @@ using UnityEngine.Audio;
 
 public enum Sound
 {
-	Bgm, // ¹è°æÀ½¾Ç 
-	Effect,// ÇÑ¹ø¸¸ ½ÇÇàµÇ´Â È¿°úÀ½
-	SubEffect, // ¸ØÃè´Ù ´Ù½Ã ½ÇÇà °¡´ÉÇÑ È¿°úÀ½
+	Bgm, // ë°°ê²½ìŒì•… 
+	Effect,// í•œë²ˆë§Œ ì‹¤í–‰ë˜ëŠ” íš¨ê³¼ìŒ
+	SubEffect, // ë©ˆì·„ë‹¤ ë‹¤ì‹œ ì‹¤í–‰ ê°€ëŠ¥í•œ íš¨ê³¼ìŒ
 	MaxCount,
 }
 
@@ -206,7 +206,7 @@ public class SoundManager : MonoBehaviour
 
 			if (audioSource == null)
 			{
-				Debug.Log("¸ğµç È¿°úÀ½ ¼Ò½º°¡ »ç¿ëÁßÀÔ´Ï´Ù.");
+				Debug.Log("ëª¨ë“  íš¨ê³¼ìŒ ì†ŒìŠ¤ê°€ ì‚¬ìš©ì¤‘ì…ë‹ˆë‹¤.");
 				return null;
 			}
 
@@ -328,8 +328,8 @@ public class SoundManager : MonoBehaviour
 		_bgmAudio.clip = null;
 	}
 
-	//ÇöÀç pause»ç¿ëÀº ÇÏ³ªÀÇ À½¾Ç¸¸ »ç¿ëÇÏ¹Ç·Î ¹®Á¦ ¹ß»ı ¿©ºÎ°¡ ¾øÁö¸¸
-	//ÃßÈÄ ÇÑ¹ø¿¡ µÎ°³ ÀÌ»óÀÌ »ç¿ëµÉ½Ã ¹®Á¦ ¹ß»ı ¹× ÇØ°á ÇÊ¿ä
+	//í˜„ì¬ pauseì‚¬ìš©ì€ í•˜ë‚˜ì˜ ìŒì•…ë§Œ ì‚¬ìš©í•˜ë¯€ë¡œ ë¬¸ì œ ë°œìƒ ì—¬ë¶€ê°€ ì—†ì§€ë§Œ
+	//ì¶”í›„ í•œë²ˆì— ë‘ê°œ ì´ìƒì´ ì‚¬ìš©ë ì‹œ ë¬¸ì œ ë°œìƒ ë° í•´ê²° í•„ìš”
 	public void UnPauseSubEffect()
 	{
 		if (_subEffectAudio.clip != null)

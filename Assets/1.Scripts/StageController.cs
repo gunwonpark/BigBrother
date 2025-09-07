@@ -4,15 +4,14 @@ using System.Text;
 using TMPro;
 using UnityEngine;
 
-// �� ������ ���¸� �����ϴ� ���� Ŭ����
 public class CharInfo
 {
     public char Character;
-    public bool IsMine;        // ���� ���� �ΰ�
-    public bool IsRemoved;     // ���ŵǾ��°�
-    public bool IsHoveredHint; // ���콺 ȣ���� ���� ���� �����ΰ�
-    public int HintState;      // 0: �⺻, 1: ���, 2: ȸ��
-    public bool CanClicked;    // Ŭ�� ������ �����ΰ�(Ʃ�丮���)
+    public bool IsMine;        
+    public bool IsRemoved;     
+    public bool IsHoveredHint; 
+    public int HintState;      
+    public bool CanClicked;    
     public bool CanRightClicked; 
     public bool CanLeftClicked;
     public CharInfo(char character)
@@ -204,18 +203,15 @@ public class StageController : MonoBehaviour
         return -1;
     }
 
-    // ��Ŭ�� ����
     private void OnLeftClick(int index)
     {
         CharInfo info = charInfos[index];
         if (info.IsRemoved || !char.IsLetter(info.Character) || info.CanClicked == false || info.CanLeftClicked == false) return;
-        // ���ڸ� Ŭ���� ���
         if (info.IsMine)
         {
-            // ���ڴ� ���ŵ��� �ʰ�, �������� ����
             GameManager.Instance.OnMineClicked();
         }
-        // ���ڰ� �ƴ� ���ڸ� Ŭ���� ���
+
         else
         {
             DataManager.Instance.IsTextClicked = true;
@@ -224,7 +220,6 @@ public class StageController : MonoBehaviour
             
             UpdateDisplayText();
 
-            // �����ؾ� �� ���ڸ� ��� ���������� �¸�
             if (removableLetterCount <= 0)
             {
                 GameManager.Instance.StageClear();
@@ -232,7 +227,6 @@ public class StageController : MonoBehaviour
         }
     }
 
-    // ��Ŭ�� ��Ʈ ����
     private void OnRightClick(int index)
     {
         CharInfo info = charInfos[index];
@@ -346,6 +340,7 @@ public class StageController : MonoBehaviour
         }
     }
 
+    // 튜토리얼용 제어
     public void EnableRightClick()
     {
         charInfos[6].CanClicked = true;
