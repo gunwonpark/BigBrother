@@ -43,10 +43,16 @@ public class NPCDialogueController : MonoBehaviour
 	[Header("Tilosen FX")]
 	[SerializeField] private CanvasGroup eye1;
 	[SerializeField] private CanvasGroup eye2;
-	[SerializeField] private float eyeFadeDuration = 2f;   // fade-in
-	[SerializeField] private float eyeGapBetween = 1f;     // 눈1→눈2 사이
-	[SerializeField] private float afterEyesWait = 2f;     // 눈2 후 대기
+	[SerializeField] private float eyeFadeDuration = 2f;    // (첫 1회) fade-in
+	[SerializeField] private float eyeGapBetween = 1f;      // 눈1→눈2 사이
+	[SerializeField] private float afterEyesWait = 2f;      // 눈2 후 대기
 	[SerializeField] private float eyeFadeOutDuration = 1.2f; // fade-out
+
+	[Header("Audio")]
+	[SerializeField] private float storyBgmFadeIn = 1.2f;
+	
+	[SerializeField] private float eyesBgmFadeIn = 0.8f;
+	[SerializeField] private float eyesBgmFadeOut = 0.8f;
 
 	// 내부 상태
 	private readonly List<string> lines = new();
@@ -59,14 +65,22 @@ public class NPCDialogueController : MonoBehaviour
 	private int choiceTriggerIndex = -1;
 
 	// 틸로슨 연출 상태
-	private bool tilosenPendingEyeFX = false;        // "뭐라고?" 라인 끝났고, 클릭 시 눈 연출 시작
-	private string tilosenPendingNpcLine = null;     // 눈 연출 후 출력할 빨간 대사
-	private bool tilosenAwaitingLoopChoice = false;  // 빨간 대사 후 클릭 시 다시 선택지
+	private bool tilosenPendingEyeFX = false;        // (첫 1회) "@뭐라고?@" 라인 끝난 뒤 클릭 시 눈 연출 시작
+	private string tilosenPendingNpcLine = null;     // 눈 연출(또는 직행) 후 출력할 빨간 대사
+	private bool tilosenAwaitingLoopChoice = false;  // 빨간 대사 뒤 클릭 시 다시 선택지
 	private int tilosenEyeFXTriggerLineIndex = -1;   // "@뭐라고?@" 라인 인덱스
 
-	// ("빅브라더님은 위대하다!!") 라인 끝나면 자동 fade-out
+	private bool tilosenEyesStartedOnce = false;     // 눈 연출(시각/사운드) 이미 시작했는가
+	private bool tilosenEyesSfxPlaying = false;      // 눈 SFX(BGM채널) 재생 중인가
+	private bool tilosenDirectReplyPending = false;  // (반복 시) 클릭하면 바로 빨간 대사로
+	private int tilosenDirectReplyTriggerLineIndex = -1;
+
+	// ("빅브라더님은 위대하다!!") 라인 끝나면 눈만 즉시 fade-out
 	private bool tilosenPendingFadeOutAfterShout = false;
 	private int tilosenShoutLineIndex = -1;
+
+	// 샤우트 라인 끝 이후 "다음 클릭에서" BGM 복귀 처리
+	private bool tilosenRestoreBgmOnNextClick = false;
 
 	// 한 줄 타이핑 완료 콜백 중복 방지
 	private int lastTypingCompleteLineIndex = -1;
@@ -103,7 +117,14 @@ public class NPCDialogueController : MonoBehaviour
 
 	private void Start()
 	{
-		SoundManager.Instance.Play("story_bgm", Sound.Bgm, volume: 1f);
+		if (npc == NpcId.NPC_003)
+		{
+			SoundManager.Instance.Play("telescreen", Sound.Bgm);
+		}
+		else
+		{
+			StartCoroutine(SoundManager.Instance.FadeInBGM("story_bgm", storyBgmFadeIn));
+		}		
 	}
 
 	void OnDestroy()
@@ -206,14 +227,30 @@ public class NPCDialogueController : MonoBehaviour
 
 	public void OnClickBackground()
 	{
-		// 틸로슨: "@뭐라고?@" 라인 이후 → 클릭하면 눈 연출 시작
+		SoundManager.Instance.Play("click_down",Sound.Effect);
+
+		SoundManager.Instance.Play("click_up", Sound.Effect);
+
+		if (npc == NpcId.NPC_001 && tilosenRestoreBgmOnNextClick && !isTyping && index == tilosenShoutLineIndex)
+		{
+			StartCoroutine(CoRestoreBgmAndNext());
+			return;
+		}
+
+		// (반복 루프용) "@뭐라고?@" 라인 뒤 클릭 시, 바로 빨간 대사로
+		if (npc == NpcId.NPC_001 && tilosenDirectReplyPending && !isTyping && index == tilosenDirectReplyTriggerLineIndex)
+		{
+			InsertRedReplyAndNext();
+			return;
+		}
+
+		// (첫 1회만)"@뭐라고?@" 라인 뒤 클릭 시 눈 연출 시작
 		if (npc == NpcId.NPC_001 && tilosenPendingEyeFX && !isTyping && index == tilosenEyeFXTriggerLineIndex)
 		{
 			StartCoroutine(CoTilosenEyeFXThenReply());
 			return;
 		}
 
-		// 틸로슨 루프: 빨간 대사 뒤 클릭 시, 선택지 다시 열기
 		if (npc == NpcId.NPC_001 && tilosenAwaitingLoopChoice && !isTyping)
 		{
 			if (choiceGroup && choiceGroup.alpha <= 0.001f)
@@ -227,13 +264,7 @@ public class NPCDialogueController : MonoBehaviour
 			return;
 		}
 
-		if (isTyping)
-		{
-			ForceComplete();
-			return;
-		}
-
-		// 4) 일반 진행
+		if (isTyping) { ForceComplete(); return; }
 		Next();
 	}
 
@@ -271,32 +302,41 @@ public class NPCDialogueController : MonoBehaviour
 		{
 			if (which == 1) // "뭐라고?"
 			{
-				// 플레이어 대사 삽입 
 				lines.Insert(index + 1, "@뭐라고?@");
 
-				// 클릭 시점에 눈 연출을 시작하도록 플래그만 세팅
-				tilosenPendingEyeFX = true;
-				tilosenEyeFXTriggerLineIndex = index + 1;
-
+				// 빨간 대사 텍스트와 루프 상태 on
 				tilosenPendingNpcLine = "<b><color=#FF3B3B>지금 뭐라고 했나?</color></b>";
 				tilosenAwaitingLoopChoice = true;
 
-				Next(); // "@뭐라고?@" 라인 출력 시작
+				if (!tilosenEyesStartedOnce)
+				{
+					// 첫 1회만 클릭 시 눈 연출 시작
+					tilosenPendingEyeFX = true;
+					tilosenEyeFXTriggerLineIndex = index + 1;
+					tilosenDirectReplyPending = false;
+				}
+				else
+				{
+					// 이후 반복 클릭 시 바로 빨간 대사로 (연출 재실행 없음)
+					tilosenPendingEyeFX = false;
+					tilosenDirectReplyPending = true;
+					tilosenDirectReplyTriggerLineIndex = index + 1;
+				}
+
+				Next();
 				return;
 			}
 			else // "빅브라더님은 위대하다!!"
 			{
 				tilosenAwaitingLoopChoice = false;
 
-				// 샤우트 라인 + 다음 NPC 라인
 				lines.Insert(index + 1, "@<b><size=70>빅브라더님은 위대하다!!</size></b>@");
 				lines.Insert(index + 2, "요즘 일은 잘 되어가나?");
 
-				// 샤우트 라인 종료 시 자동 FadeOut
 				tilosenPendingFadeOutAfterShout = true;
 				tilosenShoutLineIndex = index + 1;
 
-				Next(); // 샤우트 라인 출력 시작
+				Next(); 
 				return;
 			}
 		}
@@ -398,17 +438,14 @@ public class NPCDialogueController : MonoBehaviour
 		isTyping = false;
 		dialogueText.text = currentFullRich ?? dialogueText.text;
 
-		// 스킵으로 끝내도 동일하게 콜백
 		OnLineTypingComplete(index);
 	}
 
 	void OnLineTypingComplete(int lineIndex)
 	{
-		// 중복 방지
 		if (lastTypingCompleteLineIndex == lineIndex) return;
 		lastTypingCompleteLineIndex = lineIndex;
 
-		// 샤우트 라인 끝난 즉시 눈 FadeOut
 		if (npc == NpcId.NPC_001 && tilosenPendingFadeOutAfterShout && lineIndex == tilosenShoutLineIndex)
 		{
 			StartCoroutine(CoFadeOutEyesOnly());
@@ -426,18 +463,20 @@ public class NPCDialogueController : MonoBehaviour
 	{
 		backgroundClick.interactable = false;
 
+		if (!tilosenEyesSfxPlaying)
+		{
+			StartCoroutine(SoundManager.Instance.FadeInBGM("NPC_001 eyes", eyesBgmFadeIn));
+			tilosenEyesSfxPlaying = true;
+		}
+
 		dialogueText.gameObject.SetActive(false);
 
 		eye1.alpha = 0f;
 		eye2.alpha = 0f;
 
 		yield return FadeCanvas(eye1, 0f, 1f, eyeFadeDuration);
-
-
 		yield return new WaitForSeconds(eyeGapBetween);
-
 		yield return FadeCanvas(eye2, 0f, 1f, eyeFadeDuration);
-
 		yield return new WaitForSeconds(afterEyesWait);
 
 		dialogueText.gameObject.SetActive(true);
@@ -447,15 +486,30 @@ public class NPCDialogueController : MonoBehaviour
 			lines.Insert(index + 1, tilosenPendingNpcLine);
 			tilosenPendingNpcLine = null;
 		}
+
 		tilosenPendingEyeFX = false;
+		tilosenEyesStartedOnce = true; 
 
 		backgroundClick.interactable = true;
-		Next(); // 빨간 대사 표시
+		Next(); 
+	}
+
+	void InsertRedReplyAndNext()
+	{
+		tilosenDirectReplyPending = false;
+
+		if (!string.IsNullOrEmpty(tilosenPendingNpcLine))
+		{
+			lines.Insert(index + 1, tilosenPendingNpcLine);
+			tilosenPendingNpcLine = null;
+		}
+
+		Next();
 	}
 
 	IEnumerator CoFadeOutEyesOnly()
 	{
-		tilosenPendingFadeOutAfterShout = false; // 소비
+		tilosenPendingFadeOutAfterShout = false; 
 
 		backgroundClick.interactable = false;
 
@@ -463,6 +517,21 @@ public class NPCDialogueController : MonoBehaviour
 			yield return FadeEyesOut(eyeFadeOutDuration);
 
 		backgroundClick.interactable = true;
+
+		// 다음 클릭에서 BGM 복귀하도록 마킹
+		tilosenRestoreBgmOnNextClick = true;
+	}
+
+	private IEnumerator CoRestoreBgmAndNext()
+	{
+		tilosenRestoreBgmOnNextClick = false;
+
+		yield return SoundManager.Instance.FadeOutBGM(eyesBgmFadeOut);
+		tilosenEyesSfxPlaying = false;
+
+		StartCoroutine(SoundManager.Instance.FadeInBGM("story_bgm", storyBgmFadeIn));
+
+		Next();
 	}
 
 	bool AreEyesVisible()
@@ -482,13 +551,13 @@ public class NPCDialogueController : MonoBehaviour
 		{
 			t += Time.deltaTime;
 			float k = Mathf.Clamp01(t / dur);
-			eye1.alpha = Mathf.Lerp(a1s, 0f, k);
-			eye2.alpha = Mathf.Lerp(a2s, 0f, k);
+			if (eye1) eye1.alpha = Mathf.Lerp(a1s, 0f, k);
+			if (eye2) eye2.alpha = Mathf.Lerp(a2s, 0f, k);
 			yield return null;
 		}
 
-		eye1.alpha = 0f;
-		eye2.alpha = 0f;
+		if (eye1) eye1.alpha = 0f;
+		if (eye2) eye2.alpha = 0f;
 	}
 
 	IEnumerator FadeCanvas(CanvasGroup cg, float from, float to, float dur)
@@ -505,31 +574,11 @@ public class NPCDialogueController : MonoBehaviour
 		if (cg) cg.alpha = to;
 	}
 
-	// --- 씬 전환 ---
 	void FinishSequence()
 	{
 		if (isTransitioning) return;
 		isTransitioning = true;
-
-		int next = GetDefaultNextStageByNpc();
-		if (next > 0)
-		{
-			DataManager.Instance.CurrentWorldLevel = next;
-		}
-
 		SceneManager.LoadScene(nextScene);
-	}
-
-	int GetDefaultNextStageByNpc()
-	{
-		switch (npc)
-		{
-			case NpcId.NPC_001: return 1;
-			case NpcId.NPC_002: return 2;
-			case NpcId.NPC_003: return 3;
-			case NpcId.NPC_004: return 4;
-			default: return 0;
-		}
 	}
 
 	// === 좌우 반전(플레이어 대사 전용) ===

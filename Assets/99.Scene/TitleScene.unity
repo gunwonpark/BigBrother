@@ -878,8 +878,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: '[ 2052 ]'
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 61a45923fbd7b044c85ce328d22e9198, type: 2}
-  m_sharedMaterial: {fileID: -422400621731628982, guid: 61a45923fbd7b044c85ce328d22e9198, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: a31bd06211976d5408ba2f4a38ec3c9d, type: 2}
+  m_sharedMaterial: {fileID: -598816281687504991, guid: a31bd06211976d5408ba2f4a38ec3c9d, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -1836,8 +1836,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: IGNORANCE IS STRENGTH
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 61a45923fbd7b044c85ce328d22e9198, type: 2}
-  m_sharedMaterial: {fileID: -422400621731628982, guid: 61a45923fbd7b044c85ce328d22e9198, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: a31bd06211976d5408ba2f4a38ec3c9d, type: 2}
+  m_sharedMaterial: {fileID: -598816281687504991, guid: a31bd06211976d5408ba2f4a38ec3c9d, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []

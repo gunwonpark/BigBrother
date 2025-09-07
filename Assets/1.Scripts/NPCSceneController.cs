@@ -8,7 +8,9 @@ public class NPCSceneController : MonoBehaviour
 	private void Awake()
 	{
 		// 1) 이전 씬에서 넘어온 다음 NPC 번호(1~4) 꺼내기.
-		int npcNum = DataManager.Instance.CurrentWorldLevel;
+		int level = DataManager.Instance.CurrentWorldLevel;
+
+		int npcNum = level == 0 ? 1 : level;
 
 		if (npcRoots == null) return;
 
