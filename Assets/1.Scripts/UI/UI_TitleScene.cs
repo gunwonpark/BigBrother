@@ -51,7 +51,12 @@ public class UI_TitleScene : MonoBehaviour
 		if (endButton) endButton.onClick.RemoveAllListeners();
 	}
 
-	private void OnClickStartButton()
+    private void Start()
+    {
+        SoundManager.Instance.Play("game_bgm", Sound.Bgm);
+    }
+
+    private void OnClickStartButton()
 	{
 		if (sequenceRunning) return;
 		sequenceRunning = true;
@@ -94,6 +99,7 @@ public class UI_TitleScene : MonoBehaviour
 
 		if (mottoText)
 		{
+            SoundManager.Instance.Play("impact_sound", Sound.Effect);
 			mottoText.text = "IGNORANCE IS STRENGTH";
 			yield return FadeTMPAlpha(mottoText, 0f, 1f, 0);
 			yield return new WaitForSeconds(mottoHoldTime);
@@ -111,7 +117,8 @@ public class UI_TitleScene : MonoBehaviour
 		gameObject.SetActive(false);
 
         introUI.gameObject.SetActive(true);
-	}
+        SoundManager.Instance.StopBGM();
+    }
 
 	private IEnumerator WaitForOpenOnce()
 	{

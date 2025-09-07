@@ -62,6 +62,8 @@ public class GameManager : MonoBehaviour
         }
     }
 
+    public bool IsUIOn = false;
+
     void Start()
     {
         StartGame();
@@ -106,7 +108,7 @@ public class GameManager : MonoBehaviour
             _ => "UnKnown STAGE"
         };
 
-        if (DataManager.Instance.CurrentWorldLevel == 0)
+        if (DataManager.Instance.NeedTutorial)
         {
             sceneChanger.Init(name, 1f, 1f);
         }
@@ -128,12 +130,10 @@ public class GameManager : MonoBehaviour
 
         yield return sceneChanger.SceneEnter();
 
-        if (DataManager.Instance.CurrentWorldLevel == 0)
+        if (DataManager.Instance.NeedTutorial)
         {
             tutorialUI.gameObject.SetActive(true);
         }
-
-        
     }
 
     public void OnMineClicked()
@@ -293,7 +293,7 @@ public class GameManager : MonoBehaviour
     {
         fullEyeController.gameObject.SetActive(false);
         // 3초 뒤에 정답 글자 fade in
-        yield return new WaitForSeconds(3f);
+        yield return new WaitForSeconds(1.5f);
         yield return mainUI.FadeCanvasGroup(0f, 3f);
         // 지뢰 글자가 정돈된 상태로 3초간 떠있음
         yield return new WaitForSeconds(2f);

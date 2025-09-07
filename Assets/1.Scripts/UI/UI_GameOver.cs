@@ -1,5 +1,6 @@
 using System;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 public class UI_GameOver : MonoBehaviour
@@ -13,7 +14,6 @@ public class UI_GameOver : MonoBehaviour
 
     private void OnClickRestart()
     {
-        GameManager.Instance.Restart();
-        this.gameObject.SetActive(false);
+        SceneManager.LoadScene("MainScene");
     }
 }

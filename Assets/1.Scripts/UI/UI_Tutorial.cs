@@ -4,19 +4,6 @@ using UnityEngine;
 using UnityEngine.UI;
 
 [System.Serializable]
-public class TutorialDialogue
-{
-    public int groupIndex;
-    public string[] dialogues;
-}
-
-[CreateAssetMenu(fileName = "TutorialDialogues", menuName = "ScriptableObjects/TutorialDialogues", order = 1)]
-public class TutorialDialogues : ScriptableObject
-{
-    public TutorialDialogue[] dialogues;
-}
-
-[System.Serializable]
 public class DialogueGroup
 {
     public GameObject groupObject;
@@ -38,6 +25,8 @@ public class UI_Tutorial : MonoBehaviour
     [SerializeField] private DialogueGroup[] DialogueGroup; 
     [SerializeField] private TutorialDialogues tutorialDialogue;
     [SerializeField] private Image slideIndicator;
+    [SerializeField] private GameObject RightClickObject;
+    [SerializeField] private GameObject LeftClickObject;
 
     private int currentDialogueIndex = 0;
     private bool isTyping = false;
@@ -50,6 +39,8 @@ public class UI_Tutorial : MonoBehaviour
 
     public IEnumerator DoTutorial()
     {
+        DataManager.Instance.NeedTutorial = false;
+
         yield return FadeImage(0.97f, 1.0f);
 
         while(currentDialogueIndex < tutorialDialogue.dialogues.Length)
@@ -77,6 +68,7 @@ public class UI_Tutorial : MonoBehaviour
                 GameManager.Instance.ShowRightClick();
                 yield return new WaitUntil(() => DataManager.Instance.IsTextClicked);
                 GameManager.Instance.HideRightClick();
+                RightClickObject.gameObject.SetActive(true);
                 DataManager.Instance.IsTextClicked = false;
             }
             else if(currentDialogueIndex == 4)
@@ -84,6 +76,7 @@ public class UI_Tutorial : MonoBehaviour
                 GameManager.Instance.ShowLeftClick();
                 yield return new WaitUntil(() => DataManager.Instance.IsTextClicked);
                 GameManager.Instance.HideLeftClick();
+                LeftClickObject.gameObject.SetActive(true);
             }
             else if(currentDialogueIndex == 5)
             {

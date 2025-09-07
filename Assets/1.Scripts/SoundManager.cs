@@ -189,7 +189,7 @@ public class SoundManager : MonoBehaviour
 				audioSource.clip = audioClip;
 				audioSource.volume = volume;
 				audioSource.pitch = pitch;
-				audioSource.time = time;
+				//audioSource.time = time;
 				audioSource.Play();
 			});
 		}
@@ -214,7 +214,7 @@ public class SoundManager : MonoBehaviour
 			{
 				audioSource.pitch = pitch;
 				audioSource.volume = volume;
-				audioSource.time = time;
+				//audioSource.time = time;
 				audioSource.loop = false;
 				if (time > 0f)
 				{

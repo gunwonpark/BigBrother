@@ -28,6 +28,9 @@ public class UI_GameClear : MonoBehaviour
         }
         clearText.alpha = 1; // 확실히 완전히 보이도록 설정
         nextButton.interactable = true;
+
+        yield return new WaitForSeconds(2f);
+        NextScene();
     }
 
     private void Start()

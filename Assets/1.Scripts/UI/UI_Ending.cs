@@ -34,12 +34,16 @@ public class UI_Ending : MonoBehaviour
 
         yield return new WaitForSeconds(2f);
         
+        SoundManager.Instance.Play("final_code", Sound.Effect);
         answerText1.gameObject.SetActive(true);
         yield return new WaitForSeconds(2f);
+        SoundManager.Instance.Play("final_code", Sound.Effect);
         answerText2.gameObject.SetActive(true);
         yield return new WaitForSeconds(2f);
+        SoundManager.Instance.Play("final_code", Sound.Effect);
         answerText3.gameObject.SetActive(true);
         yield return new WaitForSeconds(2f);
+        SoundManager.Instance.Play("final_code", Sound.Effect);
         answerText4.gameObject.SetActive(true);
         yield return new WaitForSeconds(2f);
 
@@ -50,6 +54,7 @@ public class UI_Ending : MonoBehaviour
 
         yield return new WaitForSeconds(3f);
 
+        SoundManager.Instance.StopBGM();
         SceneManager.LoadScene("EndingScene");
     }
 

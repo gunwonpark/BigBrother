@@ -48,7 +48,7 @@ public class UI_Info : MonoBehaviour
     }
 
     private void ShowRuleObject()
-    {
+    {      
         SoundManager.Instance.Play("Memo", Sound.Effect);
         ruleObjectButton.gameObject.SetActive(true);
     }

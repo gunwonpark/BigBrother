@@ -3,15 +3,16 @@ using System.Linq;
 using System.Text;
 using TMPro;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.UI;
+using static UnityEngine.GraphicsBuffer;
 
 public class CharInfo
 {
     public char Character;
     public bool IsMine;        
     public bool IsRemoved;     
-    public bool IsHoveredHint; 
-    public int HintState;      
+    public bool IsHoveredHint;       
     public bool IsHintClicked;
     public bool IsChecked;
     public int HintState; // 0: 없음, 1: 흰색, 2: 회색, 3: 번갈아서 깜빡임
@@ -83,9 +84,8 @@ public class StageController : MonoBehaviour
             }
         }
 
-        if (DataManager.Instance.CurrentWorldLevel == 0)
+        if (DataManager.Instance.NeedTutorial)
         {
-            
             charInfos.ForEach(c => { c.CanClicked = false; c.CanLeftClicked = false; c.CanRightClicked = false; });
 
             
@@ -141,6 +141,29 @@ public class StageController : MonoBehaviour
         if (isBlinkingActive)
         {
             UpdateDisplayText();
+        }
+
+        PointerEventData pointerData = new PointerEventData(EventSystem.current)
+        {
+            position = Input.mousePosition
+        };
+
+        List<RaycastResult> results = new List<RaycastResult>();
+        EventSystem.current.RaycastAll(pointerData, results);
+
+        if(results.Count > 0)
+        {
+            bool isTextHit = false;
+            for(int i = 0; i < sentenceText.Length; i++)
+            {
+                if (results[0].gameObject == sentenceText[i].gameObject)
+                {
+                    isTextHit = true;
+                    break;
+                }
+            }
+            if (isTextHit == false)
+                return;
         }
 
         int currentHoverIndex = GetCharacterIndexAt(Input.mousePosition);
@@ -202,28 +225,6 @@ public class StageController : MonoBehaviour
         }
     }
 
-    private List<int> GetLetterIndicesInRange(int startIndex, int direction, int maxLetters)
-    {
-        var indices = new List<int>();
-        int sentenceLength = charInfos.Count;
-        int lettersFound = 0;
-
-        for (int i = 1; i < sentenceLength; i++)
-        {
-            int currentIndex = (startIndex + (i * direction) + sentenceLength) % sentenceLength;
-            if (char.IsLetter(charInfos[currentIndex].Character))
-            {
-                lettersFound++;
-                indices.Add(currentIndex);
-                if (lettersFound >= maxLetters)
-                {
-                    break;
-                }
-            }
-        }
-        return indices;
-    }
-
     private int GetCharacterIndexAt(Vector2 position)
     {
         for (int i = 0; i < sentenceText.Length; i++)
@@ -249,13 +250,6 @@ public class StageController : MonoBehaviour
         {            
             GameManager.Instance.OnMineClicked();
         }
-      
-        if (info.IsMine)
-        {
-            Debug.Log("Clicked on a mine!");
-            GameManager.Instance.OnMineClicked();
-        }
-
         else
         {
             DataManager.Instance.IsTextClicked = true;
@@ -275,7 +269,7 @@ public class StageController : MonoBehaviour
     {
         CharInfo info = charInfos[index];
        
-        if (info.IsChecked || info.IsRemoved || !char.IsLetter(info.Character) || GameManager.Instance.RemainHintCount <= 0 || info.CanClicked == false || info.CanRightClicked == false) return;
+        if (info.IsChecked || info.IsRemoved || !char.IsLetter(info.Character) || info.CanClicked == false || info.CanRightClicked == false) return;
 
         if(Input.GetKey(KeyCode.LeftControl))
         {
@@ -295,6 +289,9 @@ public class StageController : MonoBehaviour
             }
             return;
         }
+
+        if (GameManager.Instance.RemainHintCount <= 0) return;
+        
 
         SoundManager.Instance.Play("right_click", Sound.Effect);
 
@@ -321,9 +318,12 @@ public class StageController : MonoBehaviour
         List<int> leftMineDistances = FindMinesInDirection(index, -1);
         List<int> rightMineDistances = FindMinesInDirection(index, 1);
 
-        // 한쪽 방향으로 1칸, 2칸 거리에 모두 mine이 있는지 확인
+        // 양쪽 또는 한쪽 1, 2칸에 지뢰가 있는 경우 깜빡임 상태로 설정
         bool isBlinkingCondition = (leftMineDistances.Contains(1) && leftMineDistances.Contains(2)) ||
-                                   (rightMineDistances.Contains(1) && rightMineDistances.Contains(2));
+                                   (rightMineDistances.Contains(1) && rightMineDistances.Contains(2)) ||
+                                   (leftMineDistances.Contains(1) && rightMineDistances.Contains(2)) ||
+                                   (leftMineDistances.Contains(2) && rightMineDistances.Contains(1));
+
 
         if (isBlinkingCondition)
         {
@@ -366,12 +366,14 @@ public class StageController : MonoBehaviour
 
             foreach (int idx in GetLetterIndicesInRange(index, -1, 2))
             {
+                if (charInfos[idx].IsRemoved) continue;
                 charInfos[idx].IsRemoved = true;
                 removableLetterCount--;
             }
 
             foreach (int idx in GetLetterIndicesInRange(index, 1, 2))
             {
+                if (charInfos[idx].IsRemoved) continue;
                 charInfos[idx].IsRemoved = true;
                 removableLetterCount--;
             }
@@ -383,6 +385,28 @@ public class StageController : MonoBehaviour
                 GameManager.Instance.StageClear();
             }
         }
+    }
+
+    private List<int> GetLetterIndicesInRange(int startIndex, int direction, int maxLetters)
+    {
+        var indices = new List<int>();
+        int sentenceLength = charInfos.Count;
+        int lettersFound = 0;
+
+        for (int i = 1; i < sentenceLength; i++)
+        {
+            int currentIndex = (startIndex + (i * direction) + sentenceLength) % sentenceLength;
+            if (char.IsLetter(charInfos[currentIndex].Character))
+            {
+                lettersFound++;
+                indices.Add(currentIndex);
+                if (lettersFound >= maxLetters)
+                {
+                    break;
+                }
+            }
+        }
+        return indices;
     }
 
     private List<int> FindMinesInDirection(int startIndex, int direction)
@@ -415,28 +439,10 @@ public class StageController : MonoBehaviour
         return mineDistances;
     }
 
-    private void ShowHintImage(int index)
-    {
-        for (int i = 0; i < sentenceText.Count(); i++)
-        {
-            GameObject hintImage = hintImages[index + i * charInfos.Count];
-            // sentenceText[i]의 자식으로 설정
-            hintImage.transform.SetParent(sentenceText[i].transform, false);
-
-            // sentenceText[i]의 index 번째 글자 위치로 이동
-            Vector3 charWorldPos = sentenceText[i].GetComponent<RectTransform>().TransformPoint(sentenceText[i].textInfo.characterInfo[index].topLeft);
-            float xgap = (sentenceText[i].textInfo.characterInfo[index].topRight.x - sentenceText[i].textInfo.characterInfo[index].bottomLeft.x) / 2;
-            Vector3 gap = new Vector3(xgap, 30f, 0); // 약간의 간격 조정
-
-            hintImage.transform.position = charWorldPos + gap;
-            hintImage.SetActive(true);
-        }
-    }
-
     private int FindMineInRange(int startIndex, int direction, int maxLetterChecks)
     {
         int sentenceLength = charInfos.Count;
-        int lettersChecked = 0; 
+        int lettersChecked = 0;
 
         for (int i = 1; i < sentenceLength; i++)
         {
@@ -461,6 +467,26 @@ public class StageController : MonoBehaviour
 
         return -1;
     }
+
+    private void ShowHintImage(int index)
+    {
+        for (int i = 0; i < sentenceText.Count(); i++)
+        {
+            GameObject hintImage = hintImages[index + i * charInfos.Count];
+            // sentenceText[i]의 자식으로 설정
+            hintImage.transform.SetParent(sentenceText[i].transform, false);
+
+            // sentenceText[i]의 index 번째 글자 위치로 이동
+            Vector3 charWorldPos = sentenceText[i].GetComponent<RectTransform>().TransformPoint(sentenceText[i].textInfo.characterInfo[index].topLeft);
+            float xgap = (sentenceText[i].textInfo.characterInfo[index].topRight.x - sentenceText[i].textInfo.characterInfo[index].bottomLeft.x) / 2;
+            Vector3 gap = new Vector3(xgap, 30f, 0); // 약간의 간격 조정
+
+            hintImage.transform.position = charWorldPos + gap;
+            hintImage.SetActive(true);
+        }
+    }
+
+
 
     private void UpdateDisplayText()
     {
