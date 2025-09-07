@@ -37,6 +37,7 @@ public class GameManager : MonoBehaviour
     [Header("UI Refs")]
     [SerializeField] private UI_Main mainUI;
     [SerializeField] private UI_Tutorial tutorialUI;
+    [SerializeField] private UI_SceneChanger sceneChanger;
 
     [field : SerializeField] public bool IsGameActive { get; private set; }
 
@@ -77,9 +78,10 @@ public class GameManager : MonoBehaviour
     public void StartGame()
     {
         SoundManager.Instance.Play("game_bgm", Sound.Bgm);
+
         ResetEyes();
 
-        LoadStage(DataManager.Instance.CurrentWorldLevel);
+        StartCoroutine(LoadStage(DataManager.Instance.CurrentWorldLevel));
     }
 
     private void ResetEyes()
@@ -92,24 +94,46 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    public void LoadStage(int stageIndex)
+    public IEnumerator LoadStage(int stageIndex)
     {
-        if(DataManager.Instance.CurrentWorldLevel != 0)
+        string name = stageIndex switch
         {
-            DataManager.Instance.IsSlidingLocked = false;
+            0 => "TUTORIAL STAGE",
+            1 => "STAGE 01",
+            2 => "STAGE 02",
+            3 => "STAGE 03",
+            4 => "STAGE 04",
+            _ => "UnKnown STAGE"
+        };
+
+        if (DataManager.Instance.CurrentWorldLevel == 0)
+        {
+            sceneChanger.Init(name, 1f, 1f);
         }
         else
         {
-            tutorialUI.gameObject.SetActive(true);
+            DataManager.Instance.IsSlidingLocked = false;
+            sceneChanger.Init(name, 0f);
         }
 
         curStage = stages.stageDatas[CurrentStageIndex];
         IsGameActive = true;
-        lives = curStage.AnswerCount;
+
+        lives = DataManager.ENABLE_FAIL_COUNT;
+
         remainingHints = curStage.HintCount;
         mainUI.ResetUI();
         mainUI.SetText(curStage);
         stageController.SetupStage(curStage);
+
+        yield return sceneChanger.SceneEnter();
+
+        if (DataManager.Instance.CurrentWorldLevel == 0)
+        {
+            tutorialUI.gameObject.SetActive(true);
+        }
+
+        
     }
 
     public void OnMineClicked()
@@ -119,7 +143,7 @@ public class GameManager : MonoBehaviour
         SoundManager.Instance.Play("click _code", Sound.Effect);
 
         lives--;
-        int deathCount = curStage.AnswerCount - lives;
+        int deathCount = DataManager.ENABLE_FAIL_COUNT - lives;
 
         IEnumerator animationToPlay = null;
         switch (deathCount)
@@ -252,7 +276,8 @@ public class GameManager : MonoBehaviour
         // 3초 뒤에 정답 글자 fade in
         yield return new WaitForSeconds(3f);
         yield return mainUI.FadeCanvasGroup(0f, 3f);
-        // 지뢰 글자가 정돈된 상태로 5초간 떠있음
+        // 지뢰 글자가 정돈된 상태로 3초간 떠있음
+        yield return new WaitForSeconds(2f);
         mainUI.ShowAnswerText();
         yield return new WaitForSeconds(5f);
         // n 번째 암호입니다 라는 글자 띄우고 3초 대기
@@ -266,9 +291,19 @@ public class GameManager : MonoBehaviour
 
     private IEnumerator EndingSequence()
     {
-        yield return null;
-
-
+        fullEyeController.gameObject.SetActive(false);
+        // 3초 뒤에 정답 글자 fade in
+        yield return new WaitForSeconds(3f);
+        yield return mainUI.FadeCanvasGroup(0f, 3f);
+        // 지뢰 글자가 정돈된 상태로 3초간 떠있음
+        yield return new WaitForSeconds(2f);
+        mainUI.ShowAnswerText();
+        yield return new WaitForSeconds(5f);
+        mainUI.ShowAquireText(CurrentStageIndex);
+        yield return new WaitForSeconds(3f);
+        mainUI.HideAquireText();
+        mainUI.HideAnswerText();
+        mainUI.DoEndingUI();
     }
 
     private IEnumerator GameFailSequence()

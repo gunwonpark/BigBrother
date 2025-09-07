@@ -1,11 +1,7 @@
-using NUnit.Framework.Constraints;
 using System.Collections;
-using Unity.VisualScripting;
 using UnityEngine;
-using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
-// ���� �������� ��ũ���� �ϸ� ������ ���۰� ���� �̾����� �Ѵ�
 public class InfiniteScroller : MonoBehaviour
 {
     public ScrollRect scrollRect;
@@ -47,14 +43,15 @@ public class InfiniteScroller : MonoBehaviour
 
         yield return new WaitForEndOfFrame();
 
+        // 튜토리얼 진행 시 잠금
         if(DataManager.Instance.IsSlidingLocked)
         {
             DisableScrolling();
             DataManager.Instance.OnSlidingUnlocked += EnableScrolling;
         }
+
         LayoutRebuilder.ForceRebuildLayoutImmediate(contentTransform);
 
-        // ������ �ϳ��� �ʺ� ���
         itemWidth = textList[0].rect.width + layoutGroup.spacing;
         float scrollableWidth = contentTransform.rect.width - viewPortTransform.rect.width;
         float targetPosition = itemWidth;

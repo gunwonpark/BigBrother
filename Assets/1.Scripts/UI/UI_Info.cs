@@ -41,7 +41,9 @@ public class UI_Info : MonoBehaviour
     private void HideRuleObject()
     {
         ruleObjectButton.gameObject.SetActive(false);
-        StopCoroutine(blinkCoroutine);
+        if (blinkCoroutine != null)
+            StopCoroutine(blinkCoroutine);
+        memoButton.gameObject.SetActive(true);
         DataManager.Instance.IsMemoButtonClicked = true;
     }
 
@@ -58,32 +60,16 @@ public class UI_Info : MonoBehaviour
 
     private IEnumerator BlinkCoroutine()
     {
-        Image memoImage = memoButton.GetComponent<Image>();
-        Color originalColor = memoImage.color;
-        Color blinkColor = Color.yellow;
-        float blinkDuration = 0.5f;
-        float elapsedTime = 0f;
-        bool isBlinking = true;
-        while (isBlinking)
+        while(true)
         {
-            // ������ ���� ����
-            while (elapsedTime < blinkDuration)
-            {
-                memoImage.color = Color.Lerp(originalColor, blinkColor, (elapsedTime / blinkDuration));
-                elapsedTime += Time.deltaTime;
-                yield return null;
-            }
-            // ������ ������� ���� ����
-            elapsedTime = 0f;
-            while (elapsedTime < blinkDuration)
-            {
-                memoImage.color = Color.Lerp(blinkColor, originalColor, (elapsedTime / blinkDuration));
-                elapsedTime += Time.deltaTime;
-                yield return null;
-            }
-            elapsedTime = 0f;
+            memoButton.gameObject.SetActive(!memoButton.gameObject.activeSelf);
+            yield return new WaitForSeconds(0.5f);
         }
-        // ���������� ���� �������� ����
-        memoImage.color = originalColor;
+    }
+
+    private void OnDisable()
+    {
+        if(blinkCoroutine != null)
+            StopCoroutine(blinkCoroutine);
     }
 }

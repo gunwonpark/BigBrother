@@ -3,7 +3,7 @@ using System.Linq;
 using System.Text;
 using TMPro;
 using UnityEngine;
-
+using UnityEngine.UI;
 
 public class CharInfo
 {
@@ -12,6 +12,11 @@ public class CharInfo
     public bool IsRemoved;     
     public bool IsHoveredHint; 
     public int HintState;      
+    public bool IsHintClicked;
+    public bool IsChecked;
+    public int HintState; // 0: 없음, 1: 흰색, 2: 회색, 3: 번갈아서 깜빡임
+
+    // 튜토리얼용 제어
     public bool CanClicked;    
     public bool CanRightClicked; 
     public bool CanLeftClicked;
@@ -24,15 +29,23 @@ public class CharInfo
         CanClicked = true;
         CanRightClicked = true;
         CanLeftClicked = true;
+        IsHintClicked = false;
+        IsChecked = false;
         HintState = 0;
     }
  }
 
 public class StageController : MonoBehaviour
 {
+    [SerializeField] private GameObject HintImage;
+    [SerializeField] private GameObject[] hintImages;
+
     [SerializeField] private InfiniteScroller infiniteScroller; 
     [SerializeField] private TextMeshProUGUI[] sentenceText;    
-    [SerializeField] private Camera mainCamera;                 
+    [SerializeField] private Camera mainCamera;
+
+    [SerializeField] private float blinkSpeed = 2f;
+    private bool isBlinkingActive = false;
 
     private List<CharInfo> charInfos = new List<CharInfo>();              
     [SerializeField] private int removableLetterCount;          
@@ -52,7 +65,24 @@ public class StageController : MonoBehaviour
         charInfos.Clear();
         charInfos.AddRange(fullSentence.Select(c => new CharInfo(c)));
 
+        hintImages = new GameObject[charInfos.Count * 3];
         
+        isBlinkingActive = false;
+
+        for (int i = 0; i < charInfos.Count; i++)
+        {
+            if (char.IsLetter(charInfos[i].Character))
+            {
+                for (int j = 0; j < 3; j++)
+                {
+                    GameObject hint = Instantiate(HintImage);
+                    hintImages[i + j * charInfos.Count] = hint;
+                    hint.SetActive(false);
+                    hint.GetComponent<Image>().color = Color.white;
+                }
+            }
+        }
+
         if (DataManager.Instance.CurrentWorldLevel == 0)
         {
             
@@ -108,7 +138,11 @@ public class StageController : MonoBehaviour
         if (!GameManager.Instance.IsGameActive) return;
         if (infiniteScroller.IsDragging) return;
 
-       
+        if (isBlinkingActive)
+        {
+            UpdateDisplayText();
+        }
+
         int currentHoverIndex = GetCharacterIndexAt(Input.mousePosition);
 
         if (currentHoverIndex != previousHoverIndex && currentHoverIndex != -1 && charInfos[currentHoverIndex].CanClicked)
@@ -216,6 +250,12 @@ public class StageController : MonoBehaviour
             GameManager.Instance.OnMineClicked();
         }
       
+        if (info.IsMine)
+        {
+            Debug.Log("Clicked on a mine!");
+            GameManager.Instance.OnMineClicked();
+        }
+
         else
         {
             DataManager.Instance.IsTextClicked = true;
@@ -235,12 +275,64 @@ public class StageController : MonoBehaviour
     {
         CharInfo info = charInfos[index];
        
-        if (info.IsMine || info.IsRemoved || !char.IsLetter(info.Character) || GameManager.Instance.RemainHintCount <= 0 || info.CanClicked == false || info.CanRightClicked == false) return;
+        if (info.IsChecked || info.IsRemoved || !char.IsLetter(info.Character) || GameManager.Instance.RemainHintCount <= 0 || info.CanClicked == false || info.CanRightClicked == false) return;
+
+        if(Input.GetKey(KeyCode.LeftControl))
+        {
+            if (info.IsHintClicked)
+            {
+                info.IsHintClicked = false;
+                for (int i = 0; i < sentenceText.Count(); i++)
+                {
+                    hintImages[index + i * charInfos.Count].SetActive(false);
+                }
+            }
+            else
+            {
+                info.IsHintClicked = true;
+
+                ShowHintImage(index);
+            }
+            return;
+        }
 
         SoundManager.Instance.Play("right_click", Sound.Effect);
 
         GameManager.Instance.RemainHintCount--;
         DataManager.Instance.IsTextClicked = true;
+
+        // 정답인 경우 노란색힌트로 표시한다
+        if(info.IsMine)
+        {
+            info.IsHintClicked = true;
+            info.IsChecked = true;
+
+            ShowHintImage(index);
+
+            for (int i = 0; i < sentenceText.Count(); i++)
+            {
+                GameObject hintImage = hintImages[index + i * charInfos.Count];
+                hintImage.GetComponent<Image>().color = new Color(1f, 0.92f, 0.016f); // 노란색으로 변경
+            }
+
+            return;
+        }
+
+        List<int> leftMineDistances = FindMinesInDirection(index, -1);
+        List<int> rightMineDistances = FindMinesInDirection(index, 1);
+
+        // 한쪽 방향으로 1칸, 2칸 거리에 모두 mine이 있는지 확인
+        bool isBlinkingCondition = (leftMineDistances.Contains(1) && leftMineDistances.Contains(2)) ||
+                                   (rightMineDistances.Contains(1) && rightMineDistances.Contains(2));
+
+        if (isBlinkingCondition)
+        {
+            info.HintState = 3; // 깜빡임 상태로 설정
+            isBlinkingActive = true; // Update에서 감지하도록 플래그 설정
+            UpdateDisplayText();
+            return; // 힌트 처리 완료
+        }
+
 
         int leftMineRange = FindMineInRange(index, -1, 2);
         
@@ -252,7 +344,7 @@ public class StageController : MonoBehaviour
         {
             finalMineRange = Mathf.Min(leftMineRange, rightMineRange);
         }
-        
+
         else if (leftMineRange != -1)
         {
             finalMineRange = leftMineRange;
@@ -291,7 +383,54 @@ public class StageController : MonoBehaviour
                 GameManager.Instance.StageClear();
             }
         }
+    }
 
+    private List<int> FindMinesInDirection(int startIndex, int direction)
+    {
+        var mineDistances = new List<int>();
+        int sentenceLength = charInfos.Count;
+        int lettersChecked = 0;
+        const int maxLetterChecks = 2;
+
+        for (int i = 1; i < sentenceLength; i++)
+        {
+            int currentIndex = (startIndex + (i * direction) + sentenceLength) % sentenceLength;
+            CharInfo currentInfo = charInfos[currentIndex];
+
+            if (char.IsLetter(currentInfo.Character))
+            {
+                lettersChecked++;
+
+                if (currentInfo.IsMine)
+                {
+                    mineDistances.Add(lettersChecked);
+                }
+
+                if (lettersChecked >= maxLetterChecks)
+                {
+                    break; // 2칸까지만 확인
+                }
+            }
+        }
+        return mineDistances;
+    }
+
+    private void ShowHintImage(int index)
+    {
+        for (int i = 0; i < sentenceText.Count(); i++)
+        {
+            GameObject hintImage = hintImages[index + i * charInfos.Count];
+            // sentenceText[i]의 자식으로 설정
+            hintImage.transform.SetParent(sentenceText[i].transform, false);
+
+            // sentenceText[i]의 index 번째 글자 위치로 이동
+            Vector3 charWorldPos = sentenceText[i].GetComponent<RectTransform>().TransformPoint(sentenceText[i].textInfo.characterInfo[index].topLeft);
+            float xgap = (sentenceText[i].textInfo.characterInfo[index].topRight.x - sentenceText[i].textInfo.characterInfo[index].bottomLeft.x) / 2;
+            Vector3 gap = new Vector3(xgap, 30f, 0); // 약간의 간격 조정
+
+            hintImage.transform.position = charWorldPos + gap;
+            hintImage.SetActive(true);
+        }
     }
 
     private int FindMineInRange(int startIndex, int direction, int maxLetterChecks)
@@ -326,11 +465,18 @@ public class StageController : MonoBehaviour
     private void UpdateDisplayText()
     {
         StringBuilder sb = new StringBuilder();
+
         foreach (CharInfo info in charInfos)
         {
             string finalTag = "<color=red>";
             if (info.HintState == 1) finalTag = "<color=white>";
             else if (info.HintState == 2) finalTag = "<color=#8C8C8C>";
+            else if (info.HintState == 3) // 깜빡임 상태
+            {
+                // 시간에 따라 흰색과 회색을 번갈아 적용
+                float pingPong = Mathf.PingPong(Time.time * blinkSpeed, 1.0f);
+                finalTag = pingPong < 0.5f ? "<color=white>" : "<color=#8C8C8C>";
+            }
             if (info.IsRemoved) finalTag = "<color=black>";
             else if (info.IsHoveredHint) finalTag = "<color=#FF6969>"; 
 
@@ -344,8 +490,12 @@ public class StageController : MonoBehaviour
         {
             textUI.text = richTextResult;
         }
+
+        bool anyBlinking = charInfos.Any(c => c.HintState == 3);
+        isBlinkingActive = anyBlinking;
     }
 
+    // 튜토리얼용 제어
     public void EnableRightClick()
     {
         charInfos[6].CanClicked = true;

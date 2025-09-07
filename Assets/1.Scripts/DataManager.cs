@@ -18,8 +18,8 @@ public class DataManager : MonoBehaviour
         }
     }
 
-    public int CurrentWorldLevel = 0;
-
+    public int CurrentWorldLevel = 4;
+    public const int ENABLE_FAIL_COUNT = 4;
 
     private bool isSlidingLocked = true;
     public bool IsSlidingLocked
