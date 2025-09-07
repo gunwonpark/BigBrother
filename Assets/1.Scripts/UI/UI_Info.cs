@@ -33,8 +33,8 @@ public class UI_Info : MonoBehaviour
 
     private void ShowHintObject()
     {
-        remainHintText.text = $"���� ��Ʈ ����: {GameManager.Instance.RemainHintCount}";
-        answerCountText.text = $"��ȣ ����: {GameManager.Instance.AnswerCount}";
+        remainHintText.text = $"남은 힌트 개수 : {GameManager.Instance.RemainHintCount}";
+        answerCountText.text = $"암호 개수 : {GameManager.Instance.AnswerCount}";
         hintObject.SetActive(true);
     }
 
