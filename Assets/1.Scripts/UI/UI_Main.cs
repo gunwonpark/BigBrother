@@ -82,11 +82,13 @@ public class UI_Main : MonoBehaviour
 
     public void ShowGameOverUI()
     {
+        SoundManager.Instance.Play("gameover", Sound.Effect);
         gameOverUI.SetActive(true);
     }
 
     public void ShowGameClearUI()
     {
+        SoundManager.Instance.Play("stage_Clear", Sound.Effect);
         gameClearUI.SetActive(true);
     }
 
@@ -114,6 +116,8 @@ public class UI_Main : MonoBehaviour
         };
 
         aquireText.text = $"{suffix} 암호를 획득하였습니다.";
+
+        SoundManager.Instance.Play("get_code", Sound.Effect);
     }
 
     public void HideAquireText()
@@ -134,7 +138,6 @@ public class UI_Main : MonoBehaviour
         gameTextGroup.alpha = targetAlpha;
     }
 
-    // Ʃ�丮�� ��
     public void BlinkMemo()
     {
         infoUI.BlinkMemo();

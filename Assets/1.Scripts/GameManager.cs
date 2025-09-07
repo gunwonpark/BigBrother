@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -76,7 +76,7 @@ public class GameManager : MonoBehaviour
 
     public void StartGame()
     {
-
+        SoundManager.Instance.Play("game_bgm", Sound.Bgm);
         ResetEyes();
 
         LoadStage(DataManager.Instance.CurrentWorldLevel);
@@ -116,6 +116,8 @@ public class GameManager : MonoBehaviour
     {
         if (!IsGameActive) return;
 
+        SoundManager.Instance.Play("click _code", Sound.Effect);
+
         lives--;
         int deathCount = curStage.AnswerCount - lives;
 
@@ -130,9 +132,11 @@ public class GameManager : MonoBehaviour
                 break;
             case 3:
                 animationToPlay = AnimateEyeFill("eyeBackground", 1.0f, 0.5f);
+                SoundManager.Instance.Play("slow heart_1 10wav", Sound.Bgm);
                 break;
             case 4:
                 animationToPlay = AnimateEyeFill("pupil", 1.0f, 0.5f);
+                SoundManager.Instance.Play("tension_code", Sound.Effect);
                 break;
         }
 

@@ -39,4 +39,9 @@ public class FullEyeController : MonoBehaviour
     {
         OnBlinkAnimationEnd?.Invoke();
     }
+
+    public void BGMFadeOut()
+    {
+        StartCoroutine(SoundManager.Instance.FadeOutBGM(1f));
+    }
 }
