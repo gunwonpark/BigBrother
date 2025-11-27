@@ -132,6 +132,7 @@ public class GameManager : MonoBehaviour
 
         if (DataManager.Instance.NeedTutorial)
         {
+            Debug.Log(DataManager.Instance.NeedTutorial);
             tutorialUI.gameObject.SetActive(true);
         }
     }

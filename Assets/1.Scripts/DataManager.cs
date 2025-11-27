@@ -4,17 +4,27 @@ using UnityEngine;
 public class DataManager : MonoBehaviour
 {
     private static DataManager instance;
-    public static DataManager Instance 
-    { 
+    public static DataManager Instance
+    {
         get
         {
-            if(instance == null)
+            if (instance == null)
             {
                 GameObject obj = new GameObject("DataManager");
                 instance = obj.AddComponent<DataManager>();
             }
             DontDestroyOnLoad(instance.gameObject);
             return instance;
+        }
+    }
+
+    private void Awake()
+    {
+        if (instance == null)
+        {
+
+            instance = this;
+            DontDestroyOnLoad(this.gameObject);
         }
     }
 
@@ -30,7 +40,7 @@ public class DataManager : MonoBehaviour
         set
         {
             isSlidingLocked = value;
-            if(!isSlidingLocked)
+            if (!isSlidingLocked)
             {
                 OnSlidingUnlocked?.Invoke();
             }
@@ -41,7 +51,7 @@ public class DataManager : MonoBehaviour
 
     public bool IsTextClicked = false;
     public bool IsMemoButtonClicked = false;
-    public bool DoSliding => DoLeftSliding && DoRightSliding;
+    public bool DoSliding => DoLeftSliding || DoRightSliding;
     public bool DoLeftSliding = false;
     public bool DoRightSliding = false;
 }

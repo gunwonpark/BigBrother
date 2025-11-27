@@ -295,7 +295,6 @@ public class StageController : MonoBehaviour
 
         SoundManager.Instance.Play("right_click", Sound.Effect);
 
-        GameManager.Instance.RemainHintCount--;
         DataManager.Instance.IsTextClicked = true;
 
         // 정답인 경우 노란색힌트로 표시한다
@@ -314,6 +313,8 @@ public class StageController : MonoBehaviour
 
             return;
         }
+
+        GameManager.Instance.RemainHintCount--;
 
         List<int> leftMineDistances = FindMinesInDirection(index, -1);
         List<int> rightMineDistances = FindMinesInDirection(index, 1);
