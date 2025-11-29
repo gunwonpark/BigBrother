@@ -39,7 +39,7 @@ public class CharInfo
 public class StageController : MonoBehaviour
 {
     [SerializeField] private GameObject HintImage;
-    [SerializeField] private GameObject[] hintImages;
+    [SerializeField] private RectTransform[] hintImages;
 
     [SerializeField] private InfiniteScroller infiniteScroller; 
     [SerializeField] private TextMeshProUGUI[] sentenceText;    
@@ -66,7 +66,7 @@ public class StageController : MonoBehaviour
         charInfos.Clear();
         charInfos.AddRange(fullSentence.Select(c => new CharInfo(c)));
 
-        hintImages = new GameObject[charInfos.Count * 3];
+        hintImages = new RectTransform[charInfos.Count * 3];
         
         isBlinkingActive = false;
 
@@ -76,9 +76,9 @@ public class StageController : MonoBehaviour
             {
                 for (int j = 0; j < 3; j++)
                 {
-                    GameObject hint = Instantiate(HintImage);
+                    RectTransform hint = Instantiate(HintImage).GetComponent<RectTransform>();
                     hintImages[i + j * charInfos.Count] = hint;
-                    hint.SetActive(false);
+                    hint.gameObject.SetActive(false);
                     hint.GetComponent<Image>().color = Color.white;
                 }
             }
@@ -163,7 +163,19 @@ public class StageController : MonoBehaviour
                 }
             }
             if (isTextHit == false)
+            {
+                if (highlightedIndices.Count > 0)
+                {
+                    foreach (int index in highlightedIndices)
+                    {
+                        if (index >= 0 && index < charInfos.Count)
+                            charInfos[index].IsHoveredHint = false;
+                    }
+                    highlightedIndices.Clear();
+                    UpdateDisplayText();
+                }
                 return;
+            }
         }
 
         int currentHoverIndex = GetCharacterIndexAt(Input.mousePosition);
@@ -278,7 +290,7 @@ public class StageController : MonoBehaviour
                 info.IsHintClicked = false;
                 for (int i = 0; i < sentenceText.Count(); i++)
                 {
-                    hintImages[index + i * charInfos.Count].SetActive(false);
+                    hintImages[index + i * charInfos.Count].gameObject.SetActive(false);
                 }
             }
             else
@@ -307,7 +319,7 @@ public class StageController : MonoBehaviour
 
             for (int i = 0; i < sentenceText.Count(); i++)
             {
-                GameObject hintImage = hintImages[index + i * charInfos.Count];
+                GameObject hintImage = hintImages[index + i * charInfos.Count].gameObject;
                 hintImage.GetComponent<Image>().color = new Color(1f, 0.92f, 0.016f); // 노란색으로 변경
             }
 
@@ -473,17 +485,19 @@ public class StageController : MonoBehaviour
     {
         for (int i = 0; i < sentenceText.Count(); i++)
         {
-            GameObject hintImage = hintImages[index + i * charInfos.Count];
+            RectTransform hintImage = hintImages[index + i * charInfos.Count];
             // sentenceText[i]의 자식으로 설정
             hintImage.transform.SetParent(sentenceText[i].transform, false);
 
-            // sentenceText[i]의 index 번째 글자 위치로 이동
-            Vector3 charWorldPos = sentenceText[i].GetComponent<RectTransform>().TransformPoint(sentenceText[i].textInfo.characterInfo[index].topLeft);
-            float xgap = (sentenceText[i].textInfo.characterInfo[index].topRight.x - sentenceText[i].textInfo.characterInfo[index].bottomLeft.x) / 2;
-            Vector3 gap = new Vector3(xgap, 30f, 0); // 약간의 간격 조정
+            Vector3 topLeft = sentenceText[i].textInfo.characterInfo[index].topLeft;
+            Vector3 topRight = sentenceText[i].textInfo.characterInfo[index].topRight;
+            
+            Vector3 center = new Vector3((topLeft.x + topRight.x) / 2, topLeft.y + 20f, 0);
 
-            hintImage.transform.position = charWorldPos + gap;
-            hintImage.SetActive(true);
+            Debug.Log($"Char World Pos: {center}");
+
+            hintImage.anchoredPosition = center;
+            hintImage.gameObject.SetActive(true);
         }
     }
 

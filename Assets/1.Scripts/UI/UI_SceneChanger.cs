@@ -8,7 +8,7 @@ public class UI_SceneChanger : MonoBehaviour
     [SerializeField] private Image fadeImage;
     [SerializeField] private TextMeshProUGUI loadingText;
     private float fadeAmount = 1f;
-    private float waitDuration = 3f;
+    private float waitDuration = 1f;
     public void Init(string showText, float fadeAmount, float waitDuration = 2f)
     {
         this.gameObject.SetActive(true);
@@ -23,9 +23,9 @@ public class UI_SceneChanger : MonoBehaviour
         fadeImage.gameObject.SetActive(true);
         loadingText.gameObject.SetActive(true);
 
-        yield return Fade(loadingText, 0f, 1f, 3f);
-        yield return new WaitForSeconds(3f);
-        yield return Fade(loadingText, 1f, 0f, 3f);
+        yield return Fade(loadingText, 0f, 1f, 1f);
+        yield return new WaitForSeconds(1f);
+        yield return Fade(loadingText, 1f, 0f, 1f);
         yield return Fade(fadeImage, 1f, fadeAmount, waitDuration);
 
         this.gameObject.SetActive(false);

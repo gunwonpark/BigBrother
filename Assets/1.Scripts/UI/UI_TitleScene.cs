@@ -112,7 +112,7 @@ public class UI_TitleScene : MonoBehaviour
 			yield return FadeCanvasGroup(blackFade, 0f, 1f, blackFadeDuration);
 		}
 
-		yield return new WaitForSeconds(3f);
+		yield return new WaitForSeconds(1f);
 
 		gameObject.SetActive(false);
 

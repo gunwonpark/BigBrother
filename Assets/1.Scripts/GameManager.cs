@@ -275,8 +275,8 @@ public class GameManager : MonoBehaviour
     {
         fullEyeController.gameObject.SetActive(false);
         // 3초 뒤에 정답 글자 fade in
-        yield return new WaitForSeconds(3f);
-        yield return mainUI.FadeCanvasGroup(0f, 3f);
+        yield return new WaitForSeconds(1f);
+        yield return mainUI.FadeCanvasGroup(0f, 1f);
         // 지뢰 글자가 정돈된 상태로 3초간 떠있음
         yield return new WaitForSeconds(2f);
         mainUI.ShowAnswerText();

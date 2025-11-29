@@ -31,7 +31,7 @@ public class DataManager : MonoBehaviour
     public int CurrentWorldLevel = 0;
     public const int ENABLE_FAIL_COUNT = 4;
 
-    public bool NeedTutorial = true;
+    public bool NeedTutorial = false;
 
     private bool isSlidingLocked = true;
     public bool IsSlidingLocked

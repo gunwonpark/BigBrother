@@ -74,6 +74,7 @@ public class UI_Tutorial : MonoBehaviour
             else if(currentDialogueIndex == 4)
             {
                 GameManager.Instance.ShowLeftClick();
+                yield return new WaitUntil(() => Input.GetMouseButtonDown(0));
                 yield return new WaitUntil(() => DataManager.Instance.IsTextClicked);
                 GameManager.Instance.HideLeftClick();
                 LeftClickObject.gameObject.SetActive(true);
